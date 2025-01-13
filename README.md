@@ -1,4 +1,7 @@
 # Voice-to-Text
+
+[![English](https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg)](README.md) [![فارسی](https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg)](README_fa.md)
+
 A modern, lightweight application for converting speech to text using Google and Vosk speech recognition models. This application automatically synchronizes with the Windows keyboard layout to provide multilingual support.
 
 ---
@@ -27,6 +30,7 @@ cd voice-to-text
 pip install -r requirements.txt
 python voice_to_text.py
 ```
+
 ---
 
 ## Usage
@@ -84,4 +88,3 @@ pip install -r requirements.txt
 - **Vosk Model**: Ensure you download and place a Vosk model in the project directory for offline recognition.
 - **Permissions**: Some features may require administrative permissions for proper functionality.
 - **Supported Languages**: Google Speech Recognition supports multiple languages, and the language will sync automatically with the Windows keyboard layout.
-```
