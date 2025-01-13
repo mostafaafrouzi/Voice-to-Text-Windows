@@ -1,11 +1,6 @@
-
----
-
-### `requirements.txt` Content
-```plaintext
 speechrecognition
 vosk
 pynput
-tk
-pyaudio  
 pywin32
+pyaudio
+tk
