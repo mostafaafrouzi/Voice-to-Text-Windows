@@ -26,7 +26,7 @@ git clone https://github.com/your-username/voice-to-text.git
 cd voice-to-text
 pip install -r requirements.txt
 python voice_to_text.py
-
+```
 ---
 
 ## Usage
