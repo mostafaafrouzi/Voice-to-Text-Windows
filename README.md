@@ -1,16 +1,28 @@
 # Voice-to-Text
-A modern, lightweight application for converting speech to text with support for multiple languages and models like Google Speech Recognition and Vosk. The application is designed with a user-friendly interface inspired by Windows 11's voice typing tool.
+A modern, lightweight application for converting speech to text using Google and Vosk speech recognition models. This application automatically synchronizes with the Windows keyboard layout to provide multilingual support.
+
+---
 
 ## Features
 - **Real-time voice-to-text conversion**
-- **Supports multiple speech recognition models**: Google and Vosk
+- **Supports multiple models**: Google and Vosk
 - **Automatic language synchronization** with Windows keyboard layout
 - **Customizable settings** for language and model selection
-- **Global keyboard shortcut** for toggling the microphone (`Ctrl + Alt + V`)
+- **Global keyboard shortcut**: `Ctrl + Alt + V` to toggle the microphone
+- **Debug logging** for troubleshooting
 
-## Prerequisites
+---
+
+## Installation
+
+### Prerequisites
 - Python 3.9 or higher
-- Microphone connected to your system
-- Install dependencies: 
-  ```bash
-  pip install -r requirements.txt
+- Ensure `pip` is installed for managing dependencies
+- A working microphone
+
+### Steps
+```bash
+git clone https://github.com/your-username/voice-to-text.git
+cd voice-to-text
+pip install -r requirements.txt
+python voice_to_text.py
