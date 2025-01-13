@@ -1,32 +1,32 @@
-# Voice-to-Text
+# تبدیل گفتار به متن
 
 <div align="center">
   <a href="README.md"><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg" alt="فارسی" width="25"/> فارسی</a> |
   <a href="README_EN.md"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg" alt="English" width="25"/> English</a>
 </div>
 
-A modern, lightweight application for converting speech to text using Google and Vosk speech recognition models. This application automatically synchronizes with the Windows keyboard layout to provide multilingual support.
+برنامه‌ای مدرن و سبک برای تبدیل گفتار به متن با استفاده از مدل‌های تشخیص گفتار Google و Vosk. این برنامه به‌طور خودکار با چیدمان کیبورد ویندوز هماهنگ شده و از چندین زبان پشتیبانی می‌کند.
 
 ---
 
-## Features
-- **Real-time voice-to-text conversion**
-- **Supports multiple models**: Google and Vosk
-- **Automatic language synchronization** with Windows keyboard layout
-- **Customizable settings** for language and model selection
-- **Global keyboard shortcut**: `Ctrl + Alt + V` to toggle the microphone
-- **Debug logging** for troubleshooting
+## امکانات
+- **تبدیل گفتار به متن به صورت لحظه‌ای**
+- **پشتیبانی از مدل‌های مختلف**: Google و Vosk
+- **هماهنگی خودکار زبان** با چیدمان کیبورد ویندوز
+- **تنظیمات قابل سفارشی‌سازی** برای انتخاب زبان و مدل
+- **میانبر کیبورد جهانی**: `Ctrl + Alt + V` برای فعال یا غیرفعال کردن میکروفون
+- **ایجاد لاگ برای اشکال‌زدایی**
 
 ---
 
-## Installation
+## نصب
 
-### Prerequisites
-- Python 3.9 or higher
-- Ensure `pip` is installed for managing dependencies
-- A working microphone
+### پیش‌نیازها
+- پایتون نسخه 3.9 یا بالاتر
+- اطمینان از نصب `pip` برای مدیریت وابستگی‌ها
+- یک میکروفون فعال
 
-### Steps
+### مراحل
 ```bash
 git clone https://github.com/your-username/voice-to-text.git
 cd voice-to-text
@@ -36,42 +36,42 @@ python voice_to_text.py
 
 ---
 
-## Usage
+## استفاده
 
-### Launch the Application
-1. Run `voice_to_text.py`.
-2. Use the 🎤 button to toggle the microphone on or off.
-3. Alternatively, press `Ctrl + Alt + V` to start or stop voice-to-text.
+### اجرای برنامه
+1. فایل `voice_to_text.py` را اجرا کنید.
+2. از دکمه 🎤 برای روشن یا خاموش کردن میکروفون استفاده کنید.
+3. یا با فشار دادن `Ctrl + Alt + V` گفتار به متن را شروع یا متوقف کنید.
 
-### Settings
-- You can:
-  - Select the recognition **language** (automatically synced with Windows keyboard layout).
-  - Switch between **Google** (online) and **Vosk** (offline) models.
-
----
-
-## Shortcuts
-- **`Ctrl + Alt + V`**: Start or stop voice-to-text.
+### تنظیمات
+- شما می‌توانید:
+  - زبان **تشخیص گفتار** را انتخاب کنید (به صورت خودکار با چیدمان کیبورد ویندوز هماهنگ می‌شود).
+  - بین مدل‌های **Google** (آنلاین) و **Vosk** (آفلاین) جابه‌جا شوید.
 
 ---
 
-## Debugging
-- Logs are stored in `debug_log.txt` in the application directory for troubleshooting.
+## میانبرها
+- **`Ctrl + Alt + V`**: شروع یا توقف تبدیل گفتار به متن.
 
 ---
 
-## Contribution
-Feel free to fork the repository, contribute new features, or fix bugs. Pull requests are welcome!
+## اشکال‌زدایی
+- لاگ‌ها در فایل `debug_log.txt` در دایرکتوری برنامه ذخیره می‌شوند.
 
 ---
 
-## License
-This project is licensed under the [MIT License](LICENSE).
+## مشارکت
+لطفاً مخزن را فورک کنید، ویژگی‌های جدید اضافه کنید یا باگ‌ها را رفع کنید. درخواست‌های Pull مورد استقبال قرار می‌گیرند!
 
 ---
 
-### Dependencies
-The following Python libraries are required to run this project:
+## مجوز
+این پروژه تحت مجوز [MIT](LICENSE) منتشر شده است.
+
+---
+
+### وابستگی‌ها
+کتابخانه‌های پایتون زیر برای اجرای این پروژه موردنیاز هستند:
 - `speechrecognition`
 - `vosk`
 - `pynput`
@@ -79,15 +79,16 @@ The following Python libraries are required to run this project:
 - `pyaudio`
 - `pywin32`
 
-Install them with:
+آن‌ها را با دستور زیر نصب کنید:
 ```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-### Notes
+### نکات
 ```plaintext
-- **Vosk Model**: Ensure you download and place a Vosk model in the project directory for offline recognition.
-- **Permissions**: Some features may require administrative permissions for proper functionality.
-- **Supported Languages**: Google Speech Recognition supports multiple languages, and the language will sync automatically with the Windows keyboard layout.
+- **مدل Vosk**: اطمینان حاصل کنید که مدل Vosk را دانلود کرده و در دایرکتوری پروژه قرار دهید.
+- **دسترسی‌ها**: برخی از ویژگی‌ها ممکن است به دسترسی‌های مدیریتی نیاز داشته باشند.
+- **زبان‌های پشتیبانی‌شده**: Google Speech Recognition از چندین زبان پشتیبانی می‌کند و زبان به صورت خودکار با چیدمان کیبورد ویندوز هماهنگ می‌شود.
+```
