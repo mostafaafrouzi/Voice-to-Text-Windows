@@ -1,6 +1,9 @@
 # Voice-to-Text
 
-[![English](https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg)](README.md) [![فارسی](https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg)](README_fa.md)
+<div align="center">
+  <a href="README.md"><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg" alt="فارسی" width="25"/> فارسی</a> |
+  <a href="README_EN.md"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg" alt="English" width="25"/> English</a>
+</div>
 
 A modern, lightweight application for converting speech to text using Google and Vosk speech recognition models. This application automatically synchronizes with the Windows keyboard layout to provide multilingual support.
 
