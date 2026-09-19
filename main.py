@@ -16,15 +16,18 @@ from app.ui.tray_icon import SystemTrayManager
 from app.ui.theme import create_app_icon
 from app.ui.theme_manager import resolve_theme, is_windows_dark_mode, get_colors
 
-MUTEX_NAME = "VoiceToTextWindows_SingleInstance_v2"
+MUTEX_NAME = r"Global\VoiceToTextWindows_SingleInstance_v2"
+_mutex_handle = None
 
 
-def ensure_single_instance():
+def ensure_single_instance() -> bool:
+    global _mutex_handle
     k32 = ctypes.windll.kernel32
-    mutex = k32.CreateMutexW(None, False, MUTEX_NAME)
-    if k32.GetLastError() == 183:
-        return None
-    return mutex
+    _mutex_handle = k32.CreateMutexW(None, False, MUTEX_NAME)
+    last_err = k32.GetLastError()
+    if last_err in (183, 5):  # ERROR_ALREADY_EXISTS or ERROR_ACCESS_DENIED
+        return False
+    return True
 
 
 def apply_global_theme(app: QApplication):
@@ -54,8 +57,7 @@ def main():
     except Exception:
         pass
 
-    mutex = ensure_single_instance()
-    if mutex is None:
+    if not ensure_single_instance():
         sys.exit(0)
 
     app = QApplication(sys.argv)
@@ -101,6 +103,7 @@ def main():
                 pill.lang_btn.setText("FA" if cur_lang.startswith("fa") else "EN")
                 # اعمال تم جدید
                 apply_global_theme(app)
+                pill.update_theme()
                 tray.refresh_menu()
 
             dlg.settings_saved.connect(on_saved)

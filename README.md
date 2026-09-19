@@ -2,184 +2,188 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/github/v/release/mostafaafrouzi/Voice-to-Text-Windows?style=for-the-badge&label=آخرین%20نسخه&color=2f81f7" alt="Latest Release">
-<img src="https://img.shields.io/github/actions/workflow/status/mostafaafrouzi/Voice-to-Text-Windows/release.yml?style=for-the-badge&label=بیلد" alt="Build Status">
-<img src="https://img.shields.io/github/downloads/mostafaafrouzi/Voice-to-Text-Windows/total?style=for-the-badge&label=دانلود&color=3fb950" alt="Downloads">
-<img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078d4?style=for-the-badge&logo=windows" alt="Windows">
-<img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+<a href="https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest">
+  <img src="https://img.shields.io/github/v/release/mostafaafrouzi/Voice-to-Text-Windows?style=for-the-badge&logo=github&color=2f81f7" alt="Latest Release">
+</a>
+<a href="https://github.com/mostafaafrouzi/Voice-to-Text-Windows/actions">
+  <img src="https://img.shields.io/github/actions/workflow/status/mostafaafrouzi/Voice-to-Text-Windows/release.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white" alt="Build Status">
+</a>
+<a href="https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases">
+  <img src="https://img.shields.io/github/downloads/mostafaafrouzi/Voice-to-Text-Windows/total?style=for-the-badge&logo=windows&color=3fb950" alt="Downloads">
+</a>
+<img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white" alt="Platform">
+<a href="LICENSE">
+  <img src="https://img.shields.io/badge/License-MIT-f39c12?style=for-the-badge" alt="License">
+</a>
 
 <br><br>
 
-# 🎙 تایپ صوتی هوشمند ویندوز ۱۱
-### **Voice-to-Text Windows**
+# 🎙 تایپ صوتی هوشمند ویندوز (Voice-to-Text Windows)
+### تبدیل گفتار به متن بلادرنگ و پرسرعت، درست مثل Gboard گوگل در اندروید
 
-> **تبدیل گفتار به متن بلادرنگ مثل Google Keyboard (Gboard) — رایگان، برای همه برنامه‌های ویندوز**
+> دستیار تایپ صوتی مدرن و رایگان برای ویندوز ۱۰ و ۱۱ با پشتیبانی فوق‌العاده از **زبان فارسی** و **انگلیسی** در تمامی نرم‌افزارهای ویندوز.
 
-[دانلود نصب‌کننده](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) • 
-[مشاهده تغییرات](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases) • 
-[گزارش مشکل](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/issues) •
-[English](README_EN.md)
-
-</div>
-
----
-
-## ✨ ویژگی‌های کلیدی
-
-| ویژگی | توضیح |
-|-------|-------|
-| ⚡ **Streaming بلادرنگ** | همزمان با صحبت متن تایپ می‌شود — دقیقاً مثل Gboard اندروید |
-| 🌍 **چندزبانه** | پشتیبانی کامل از فارسی ایران و انگلیسی آمریکا |
-| 🎯 **کار در همه‌جا** | در هر فیلد متنی در هر برنامه‌ای (ورد، مرورگر، ایمیل...) |
-| ⌨ **کلید میانبر** | فعال‌سازی سریع با `Ctrl+Alt+V` (قابل تنظیم) |
-| 🔤 **فونت Vazirmatn** | رندر کامل و صحیح متون فارسی |
-| 🌓 **تم خودکار** | تاریک / روشن / پیروی از تنظیمات ویندوز |
-| 📝 **پردازش متن فارسی** | نیم‌فاصله، ویرگول، نقطه و علائم نگارشی صوتی |
-| 🔄 **بروزرسانی خودکار** | بررسی و نصب نسخه جدید با یک کلیک |
-| 📦 **EXE مستقل** | نیازی به نصب Python یا هیچ کتابخانه‌ای نیست |
-| 🔕 **بدون مزاحمت** | آیکون در System Tray، بدون اشغال فوکوس |
-
----
-
-## 🖥 نمایش برنامه
-
-<div align="center">
-
-> ویجت کپسولی شناور در پایین صفحه — قابل جابجایی، همیشه روی بقیه پنجره‌ها
+[⬇ دانلود نصب‌کننده (Setup)](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) • 
+[📋 تغییرات نسخه‌ها (Release Notes)](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases) • 
+[🐛 گزارش مشکل یا پیشنهاد](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/issues) •
+[🌐 English Readme](README_EN.md)
 
 </div>
 
 ---
 
-## ⬇ نصب و راه‌اندازی
+## 💡 چرا Voice-to-Text Windows؟
 
-### روش ۱: نصب‌کننده (پیشنهادی)
+تایپ صوتی در اندروید به لطف **Google Keyboard (Gboard)** و سرویس‌های گفتار گوگل، سریع، روان و با دقتی کم‌نظیر کار می‌کند؛ به‌ویژه در زبان فارسی. اما در ویندوز:
+- قابلیت پیش‌فرض Voice Typing ویندوز (`Win + H`) از زبان فارسی به درستی پشتیبانی نمی‌کند یا دقت ضعیفی دارد.
+- برنامه‌های موجود دیگر یا اشتراکی و پولی هستند، یا نیازمند دانلود مدل‌های چند گیگابایتی و سخت‌افزار سنگین گرافیکی می‌باشند.
 
-1. آخرین نسخه `VoiceToText-Setup-vX.X.X.exe` را از [صفحه Releases](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) دانلود کنید
-2. نصب‌کننده را اجرا کنید — نصب کامل، آیکون دسکتاپ، منوی Start
-3. برنامه را از دسکتاپ یا منوی Start اجرا کنید
-
-### روش ۲: فایل قابل‌اجرا مستقل
-
-1. `VoiceToText.exe` را دانلود کنید
-2. مستقیماً اجرا کنید — بدون هیچ نصبی
-
-> **سیستم‌مورد نیاز:**
-> - ویندوز ۱۰ / ۱۱ (۶۴ بیتی)
-> - اتصال به اینترنت (برای Google Speech API)
-> - میکروفون
+**Voice-to-Text Windows** این خلاء را پر می‌کند: برنامه‌ای سبک، سریع و کاملاً رایگان که با موتور پردازش ابری گوگل کار می‌کند و با یک میانبر سراسری (`Ctrl + Alt + V`) در هر نرم‌افزاری (ورد، تلگرام، مرورگر، فتوشاپ، نوت‌پد و ...) صدای شما را در لحظه به متن تبدیل و تایپ می‌کند.
 
 ---
 
-## 🚀 نحوه استفاده
+## ✨ ویژگی‌های برجسته
 
-```
-۱. برنامه را اجرا کنید — آیکون در System Tray کنار ساعت ظاهر می‌شود
-۲. فیلد متنی دلخواه خود را انتخاب کنید (در هر برنامه‌ای)
-۳. Ctrl + Alt + V بفشارید — ویجت فعال می‌شود
-۴. صحبت کنید — متن بلافاصله تایپ می‌شود
-۵. دوباره Ctrl + Alt + V بفشارید تا ضبط متوقف شود
-```
-
----
-
-## ⚙ تنظیمات
-
-از طریق آیکون System Tray ← تنظیمات، یا کلیک روی آیکون ⚙ در ویجت:
-
-| تنظیم | توضیح |
-|-------|-------|
-| **زبان** | فارسی / انگلیسی |
-| **کلید میانبر** | تغییر Ctrl+Alt+V به هر ترکیب دلخواه |
-| **تم** | تاریک / روشن / سیستم |
-| **طول قطعه Streaming** | ۱ تا ۴ ثانیه |
-| **نیم‌فاصله** | اعمال خودکار |
-| **اجرای خودکار با ویندوز** | فعال/غیرفعال |
-| **بروزرسانی** | بررسی دستی یا خودکار هنگام اجرا |
+| ویژگی | توضیحات |
+| :--- | :--- |
+| ⚡ **تایپ بلادرنگ (Streaming)** | همزمان که صحبت می‌کنید کلمات تایپ می‌شوند؛ بدون معطلی و بدون نیاز به کلیک مجدد |
+| 🧠 **سیستم هوشمند VAD (تشخیص سکوت)** | تقسیم هوشمند جملات بر اساس مکث‌های طبیعی صحبت؛ جلوگیری از نصف شدن کلمات در تکلم سریع |
+| 🌐 **دو زبانه حرفه‌ای (فارسی و انگلیسی)** | جابجایی فوق‌سریع میان فارسی (`fa-IR`) و انگلیسی (`en-US`) با یک کلیک یا میانبر |
+| 🎯 **کارکرد سراسری (Universal)** | کار در هر فیلد متنی و هر برنامه دلخواه در تمام محیط سیستم‌عامل ویندوز |
+| 🎨 **طراحی مدرن Fluent ویندوز ۱۱** | ویجت کپسولی شناور شیشه‌ای (Acrylic) با گوشه‌های گرد و افکت سایه جذاب |
+| 🌓 **پشتیبانی کامل از تم تیره و روشن** | هماهنگی خودکار با تم ویندوز ۱۱ یا انتخاب دستی تم Dark / Light با پیش‌نمایش آنی |
+| 🔤 **فونت استاندارد وزیرمتن (Vazirmatn)** | رندر بی‌نقص متون و اعداد فارسی بدون هیچ‌گونه بهم‌ریختگی |
+| ✍️ **علائم نگارشی صوتی** | تبدیل گفتاری «نقطه»، «ویرگول»، «علامت سوال»، «خط بعد» به نمادهای واقعی |
+| 📐 **اعمال خودکار نیم‌فاصله‌های فارسی** | اصلاح هوشمند کلماتی مانند «می‌شود»، «کتاب‌ها»، «خانه‌مان» و ارقام فارسی |
+| 🔒 **پنجره غیرفعال‌کننده (Non-Activating)** | استفاده از `WS_EX_NOACTIVATE` تا نشانگر ماوس و فوکوس کیبورد از برنامه هدف خارج نشود |
+| 🕒 **ادغام با System Tray و استارتاپ** | مقیم در کنار ساعت با منوی دسترسی سریع و قابلیت اجرای خودکار با روشن شدن ویندوز |
+| 🔄 **سیستم خودکار بروزرسانی** | بررسی نسخه جدید در پس‌زمینه و امکان دانلود و نصب خودکار آپدیت‌ها با یک کلیک |
+| 📦 **بدون نیاز به پایتون (Standalone EXE)** | خروجی کامپایل شده مستقل به همراه فایل نصاب ویندوز استاندارد |
 
 ---
 
-## 🔧 اجرا از سورس (برای توسعه‌دهندگان)
+## 🗣 راهنمای دستورات نگارشی صوتی
+
+هنگام تایپ صوتی می‌توانید علائم نگارشی را به زبان بیاورید تا مستقیماً تایپ شوند:
+
+| کلمه گفتاری (فارسی) | کلمه گفتاری (انگلیسی) | علامت درج شده |
+| :--- | :--- | :---: |
+| «نقطه» | "period" / "full stop" | `.` |
+| «ویرگول» یا «کاما» | "comma" | `،` یا `,` |
+| «علامت سوال» | "question mark" | `؟` یا `?` |
+| «علامت تعجب» | "exclamation mark" | `!` |
+| «دو نقطه» | "colon" | `:` |
+| «برو خط بعد» یا «خط جدید» | "new line" / "enter" | اینتر و رفتن به خط بعد (`\n`) |
+| «پرانتز باز» / «پرانتز بسته» | "open parenthesis" / "close" | `(` / `)` |
+| «گیومه باز» / «گیومه بسته» | "open quote" / "close quote" | `«` / `»` |
+| «سه نقطه» | "ellipsis" | `...` |
+| «خط تیره» | "hyphen" / "dash" | `-` |
+
+---
+
+## ⬇ روش‌های نصب و استفاده
+
+### روش ۱: فایل نصب استاندارد ویندوز (پیشنهادی)
+1. فایل نصاب `VoiceToText-Setup-vX.X.X.exe` را از [بخش Releases](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) دانلود کنید.
+2. مراحل نصب را دنبال کنید (ایجاد آیکون دسکتاپ، منوی استارت و امکان فعال‌سازی اجرا با استارتاپ ویندوز).
+3. برنامه را اجرا نمایید.
+
+### روش ۲: نسخه پرتابل (بدون نیاز به نصب)
+1. فایل `VoiceToText.exe` را از [بخش Releases](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) دانلود کنید.
+2. فایل را در هر پوشه‌ای قرار داده و مستقیماً اجرا کنید.
+
+> **پیش‌نیازهای سیستمی:**
+> - ویندوز ۱۰ یا ویندوز ۱۱ (نسخه ۶۴ بیتی)
+> - اتصال پایدار به اینترنت (جهت ارسال بسته‌های صوتی به API امن گوگل)
+> - میکروفون سالم و فعال
+
+---
+
+## 🚀 نحوه استفاده سریع
+
+1. برنامه را اجرا کنید؛ یک آیکون میکروفون در کنار ساعت ویندوز (System Tray) ظاهر می‌شود و ویجت کپسولی شناور روی صفحه قرار می‌گیرد.
+2. در هر برنامه‌ای که می‌خواهید بنویسید (مانند تلگرام، ورد یا مرورگر)، نشانگر متن را داخل فیلد بگذارید.
+3. کلیدهای میانبر **`Ctrl + Alt + V`** را فشار دهید (یا روی آیکون میکروفون در ویجت شناور کلیک کنید).
+4. صحبت کنید؛ کلمات شما همزمان تایپ خواهند شد.
+5. پس از اتمام صحبت، دوباره `Ctrl + Alt + V` را بزنید یا چند لحظه مکث کنید تا ضبط به‌طور خودکار پایان یابد.
+
+---
+
+## ⚙ پنجره تنظیمات
+
+با کلیک روی آیکون ⚙ در ویجت شناور یا راست‌کلیک روی آیکون کنار ساعت و انتخاب «تنظیمات»، پنجره امکانات زیر را در اختیارتان می‌گذارد:
+- **انتخاب زبان:** سوئیچ بین فارسی ایران (`fa-IR`) و انگلیسی آمریکا (`en-US`).
+- **انتخاب میکروفون ورودی:** تعیین میکروفون پیش‌فرض ویندوز یا یک سخت‌افزار خاص.
+- **تنظیم میانبر سراسری:** تغییر `Ctrl + Alt + V` به هر کلید دلخواه دیگر (همراه با بررسی عدم تداخل با کلیدهای رزرو شده سیستم‌عامل).
+- **تنظیمات Streaming:** تنظیم طول قطعات صوتی و حساسیت تشخیص سکوت بر حسب میلی‌ثانیه.
+- **انتخاب تم رنگی:** حالت خودکار (پیروی از تم ویندوز)، حالت همیشه تیره (Dark) یا همیشه روشن (Light) با پیش‌نمایش زنده.
+- **نگارش هوشمند:** امکان فعال/غیرفعال‌سازی نیم‌فاصله، علائم صوتی و تبدیل ارقام انگلیسی به فارسی.
+- **اجرای خودکار:** راه‌اندازی همزمان با بوت شدن سیستم.
+- **بروزرسانی:** بررسی و دریافت آخرین نسخه‌های نرم‌افزار از گیت‌هاب.
+
+---
+
+## 💻 راهنمای اجرا از سورس کد (مخصوص توسعه‌دهندگان)
+
+در صورتی که می‌خواهید روی پروژه کار کنید یا آن را خودتان بیلد بگیرید:
 
 ```bash
+# دریافت مخزن
 git clone https://github.com/mostafaafrouzi/Voice-to-Text-Windows.git
 cd Voice-to-Text-Windows
+
+# نصب کتابخانه‌های مورد نیاز
 pip install -r requirements.txt
+
+# اجرای مستقیم سورس پایتون
 python main.py
 ```
 
-**ساخت EXE:**
+### کامپایل و ساخت فایل EXE:
 ```bash
 python build_exe.py
-# خروجی: dist/VoiceToText.exe
+# خروجی در dist/VoiceToText.exe ساخته می‌شود
 ```
 
-**ساخت Installer:**
+### ساخت فایل نصاب Setup با Inno Setup:
 ```bash
-python build_exe.py
+python build_installer.py
+# یا مستقیم با Inno Setup Compiler:
 "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\setup.iss
-# خروجی: dist/VoiceToText-Setup-vX.X.X.exe
 ```
 
 ---
 
-## 🏗 معماری فنی
+## ❓ پرسش‌های متداول (FAQ)
 
-```
-Voice-to-Text-Windows/
-├── app/
-│   ├── core/
-│   │   ├── engine.py        ← موتور Streaming تشخیص گفتار
-│   │   ├── audio_meter.py   ← ضبط‌کننده صوتی streaming
-│   │   ├── text_cleaner.py  ← پردازش متن فارسی (نیم‌فاصله، علائم)
-│   │   ├── injector.py      ← درج متن در برنامه فعال
-│   │   ├── hotkey.py        ← مدیریت کلید میانبر سراسری
-│   │   ├── updater.py       ← بررسی بروزرسانی از GitHub
-│   │   └── autostart.py     ← مدیریت اجرای خودکار ویندوز
-│   ├── ui/
-│   │   ├── pill_widget.py   ← ویجت کپسولی شناور
-│   │   ├── settings_win.py  ← پنجره تنظیمات
-│   │   ├── tray_icon.py     ← System Tray Icon
-│   │   ├── theme_manager.py ← مدیریت تم تاریک/روشن
-│   │   └── fonts.py         ← بارگذاری فونت Vazirmatn
-│   ├── config.py            ← مدیریت تنظیمات (AppData)
-│   └── version.py           ← شماره نسخه
-├── assets/fonts/            ← فونت Vazirmatn
-├── installer/setup.iss      ← اسکریپت Inno Setup
-├── .github/workflows/       ← GitHub Actions CI/CD
-├── tests/                   ← تست‌های واحد
-└── main.py                  ← نقطه ورود اصلی
-```
+<details>
+<summary><b>آیا تبدیل گفتار نیازمند کلید API یا پرداخت هزینه است؟</b></summary>
+خیر؛ این نرم‌افزار از اندپوینت رایگان Google Speech Recognition استفاده می‌کند و هیچ نیازی به ثبت کارت بانکی یا ایجاد API Key اختصاصی ندارد.
+</details>
+
+<details>
+<summary><b>هنگام صحبت سریع، آیا کلمات جا می‌افتند؟</b></summary>
+خیر؛ در نسخه جدید، از سیستم VAD با ردیابی نویز محیط و بافر هوشمند استفاده شده است تا قطعات صوتی تنها در هنگام مکث بین کلمات ارسال شوند و هیچ سیلابی بریده نشود.
+</details>
+
+<details>
+<summary><b>آیا پنجره شناور مانع کلیک روی برنامه‌ها می‌شود؟</b></summary>
+خیر؛ ویجت شناور از قابلیت <code>WS_EX_NOACTIVATE</code> ویندوز استفاده می‌کند، بنابراین هرگز فوکوس کیبورد را از برنامه فعال شما نمی‌دزدد. همچنین در صورت نیاز می‌توانید با دکمه ✕ آن را مخفی کنید تا فقط از طریق آیکون کنار ساعت و کلید میانبر کار کند.
+</details>
 
 ---
 
-## ❓ سوالات متداول
+## 📄 مجوز انتشار
 
-**آیا نیاز به اتصال اینترنت دارد؟**
-بله — از Google Speech-to-Text API برای تشخیص گفتار استفاده می‌شود. این API رایگان است و نیاز به کلید API ندارد.
-
-**آیا فارسی را کامل پشتیبانی می‌کند؟**
-بله — نیم‌فاصله، علائم نگارشی صوتی، و رندر صحیح با فونت Vazirmatn.
-
-**آیا از Windows Defender بلاک می‌شود؟**
-ممکن است هشدار SmartScreen نمایش داده شود (به دلیل نبود امضای دیجیتال). روی "More info" ← "Run anyway" کلیک کنید.
-
-**چرا متن با تاخیر تایپ می‌شود؟**
-در تنظیمات، "طول هر قطعه Streaming" را کاهش دهید (پیش‌فرض ۱.۵ ثانیه).
-
----
-
-## 📄 مجوز
-
-این پروژه تحت مجوز [MIT License](LICENSE) منتشر شده است.
+این نرم‌افزار تحت مجوز متن‌باز [MIT License](LICENSE) منتشر شده است و استفاده شخصی و تجاری از آن آزاد است.
 
 ---
 
 <div align="center">
 
-ساخته شده با ❤️ توسط [Mostafa Afrouzi](https://github.com/mostafaafrouzi)
+توسعه‌یافته با ❤️ توسط [Mostafa Afrouzi](https://github.com/mostafaafrouzi)
 
-⭐ اگر این پروژه مفید بود، ستاره بدید!
+⭐ اگر این برنامه برایتان کاربردی بود، با دادن ستاره (Star) در گیت‌هاب از پروژه حمایت کنید!
 
 </div>
 

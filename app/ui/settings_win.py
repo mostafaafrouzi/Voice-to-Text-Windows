@@ -57,6 +57,15 @@ class SectionCard(QWidget):
         self.body_layout.setSpacing(10)
         outer.addWidget(self.body)
 
+def _get_check_icon_path() -> str:
+    import os, sys
+    if getattr(sys, "frozen", False):
+        base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+    else:
+        base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    p = os.path.join(base, "assets", "check.png")
+    return p.replace("\\", "/")
+
 
 class SettingsDialog(QDialog):
     settings_saved = pyqtSignal()
@@ -73,25 +82,42 @@ class SettingsDialog(QDialog):
         self._update_thread = None
         self._pending_download_url = ""
 
-        self._apply_theme()
         self._init_ui()
+        self._apply_theme()
         self._load_values()
 
-    def _get_theme_colors(self):
-        setting = config.get("theme", "system")
+    def _get_theme_colors(self, theme_choice: str = None):
+        setting = theme_choice if theme_choice is not None else config.get("theme", "system")
         resolved = resolve_theme(setting)
         return get_colors(resolved), resolved
 
-    def _apply_theme(self):
-        colors, _ = self._get_theme_colors()
+    def _apply_theme(self, theme_choice: str = None):
+        colors, _ = self._get_theme_colors(theme_choice)
         self.setStyleSheet(self._build_full_style(colors))
 
+    def _on_theme_selection_changed(self, index: int):
+        theme_choice = self.theme_combo.currentData()
+        if theme_choice:
+            self._apply_theme(theme_choice)
+
     def _build_full_style(self, c: dict) -> str:
+        check_path = _get_check_icon_path()
         return f"""
 QDialog {{
     background-color: {c["bg"]};
     color: {c["text_primary"]};
     font-family: '{FONT_FAMILY}', Tahoma, 'Segoe UI';
+}}
+QWidget#SettingsHeader {{
+    background-color: {c["bg_card"]};
+    border-bottom: 1px solid {c["border"]};
+}}
+QWidget#SettingsBody {{
+    background-color: {c["bg"]};
+}}
+QWidget#SettingsFooter {{
+    background-color: {c["bg_card"]};
+    border-top: 1px solid {c["border"]};
 }}
 QWidget#SectionCard {{
     background-color: {c["bg_card"]};
@@ -104,6 +130,11 @@ QLabel {{ color: {c["text_secondary"]}; background: transparent; }}
 QLabel#HeaderTitle {{ color: {c["text_primary"]}; font-size: 17px; font-weight: 700; }}
 QLabel#HeaderSub {{ color: {c["text_muted"]}; font-size: 12px; }}
 QLabel#VersionLabel {{ color: {c["text_muted"]}; font-size: 11px; }}
+QLabel#SettingsHint {{ color: {c["text_muted"]}; font-size: 11px; }}
+QLabel#ChunkLbl {{ color: {c["mic_listening"]}; font-size: 11px; font-weight: bold; min-width: 70px; }}
+QLabel#SilenceLbl {{ color: {c["accent"]}; font-size: 11px; font-weight: bold; min-width: 70px; }}
+QLabel#HotkeyWarn {{ color: #f85149; font-size: 11px; }}
+
 QLineEdit, QComboBox {{
     background-color: {c["bg"]};
     border: 1px solid {c["border"]};
@@ -112,76 +143,147 @@ QLineEdit, QComboBox {{
     padding: 7px 12px;
     font-size: 13px;
     selection-background-color: {c["accent"]};
+    selection-color: #ffffff;
 }}
-QLineEdit:focus, QComboBox:focus {{ border-color: {c["accent"]}; }}
-QComboBox::drop-down {{ border: none; width: 24px; }}
+QLineEdit:focus, QComboBox:focus, QComboBox:hover {{
+    border-color: {c["accent"]};
+}}
+QComboBox::drop-down {{
+    border: none;
+    width: 26px;
+}}
 QComboBox QAbstractItemView {{
     background-color: {c["bg_card"]};
     border: 1px solid {c["border"]};
+    border-radius: 8px;
     color: {c["text_primary"]};
     selection-background-color: {c["accent"]};
+    selection-color: #ffffff;
     padding: 4px;
+    outline: 0px;
 }}
-QCheckBox {{ color: {c["text_primary"]}; spacing: 10px; }}
+QComboBox QAbstractItemView::item {{
+    min-height: 28px;
+    padding: 4px 10px;
+    color: {c["text_primary"]};
+    background-color: {c["bg_card"]};
+    border-radius: 4px;
+}}
+QComboBox QAbstractItemView::item:hover {{
+    background-color: {c["accent"]};
+    color: #ffffff;
+}}
+QComboBox QAbstractItemView::item:selected {{
+    background-color: {c["accent"]};
+    color: #ffffff;
+}}
+QCheckBox {{
+    color: {c["text_primary"]};
+    spacing: 10px;
+}}
 QCheckBox::indicator {{
-    width: 17px; height: 17px; border-radius: 5px;
-    border: 1.5px solid {c["border"]}; background-color: {c["bg"]};
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 1.5px solid {c["border"]};
+    background-color: {c["bg"]};
 }}
-QCheckBox::indicator:hover {{ border-color: {c["accent"]}; }}
+QCheckBox::indicator:hover {{
+    border-color: {c["accent"]};
+}}
 QCheckBox::indicator:checked {{
-    background-color: {c["accent"]}; border-color: {c["accent"]};
+    background-color: {c["accent"]};
+    border-color: {c["accent"]};
+    image: url({check_path});
+}}
+QPushButton#PrimaryBtn {{
+    background-color: {c["accent"]};
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 0 18px;
+    font-weight: bold;
+}}
+QPushButton#PrimaryBtn:hover {{
+    background-color: {c["accent_hover"]};
+}}
+QPushButton#PrimaryBtn:pressed {{
+    background-color: {c["accent_dark"]};
+}}
+QPushButton#PrimaryBtn:disabled {{
+    background-color: {c["border"]};
+    color: {c["text_muted"]};
+}}
+QPushButton#SecondaryBtn {{
+    background-color: transparent;
+    color: {c["text_secondary"]};
+    border: 1px solid {c["border"]};
+    border-radius: 8px;
+    padding: 0 16px;
+}}
+QPushButton#SecondaryBtn:hover {{
+    background-color: rgba(127, 127, 127, 0.09);
+    color: {c["text_primary"]};
+    border-color: {c["text_muted"]};
+}}
+QPushButton#SecondaryBtn:disabled {{
+    color: {c["text_muted"]};
 }}
 QSlider::groove:horizontal {{
-    height: 4px; background: {c["border"]}; border-radius: 2px;
+    height: 4px;
+    background: {c["border"]};
+    border-radius: 2px;
 }}
 QSlider::sub-page:horizontal {{
-    background: {c["accent"]}; border-radius: 2px;
+    background: {c["accent"]};
+    border-radius: 2px;
 }}
 QSlider::handle:horizontal {{
-    background: {c["text_primary"]}; border: 2px solid {c["accent"]};
-    width: 14px; margin: -5px 0; border-radius: 7px;
+    background: {c["text_primary"]};
+    border: 2px solid {c["accent"]};
+    width: 14px;
+    margin: -5px 0;
+    border-radius: 7px;
 }}
 QScrollArea {{ border: none; background: transparent; }}
 QScrollBar:vertical {{
-    background: transparent; width: 5px; border-radius: 2px;
+    background: transparent;
+    width: 5px;
+    border-radius: 2px;
 }}
 QScrollBar::handle:vertical {{
-    background: {c["border"]}; border-radius: 2px; min-height: 30px;
+    background: {c["border"]};
+    border-radius: 2px;
+    min-height: 30px;
 }}
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
 QProgressBar {{
-    border: 1px solid {c["border"]}; border-radius: 6px;
-    background: {c["bg_card"]}; height: 12px; text-align: center;
-    color: {c["text_primary"]}; font-size: 10px;
+    border: 1px solid {c["border"]};
+    border-radius: 6px;
+    background: {c["bg_card"]};
+    height: 12px;
+    text-align: center;
+    color: {c["text_primary"]};
+    font-size: 10px;
 }}
 QProgressBar::chunk {{
-    background: {c["accent"]}; border-radius: 6px;
+    background: {c["accent"]};
+    border-radius: 6px;
 }}
 """
 
     def _make_btn(self, text: str, primary: bool = False) -> QPushButton:
-        c, _ = self._get_theme_colors()
         btn = QPushButton(text)
+        btn.setObjectName("PrimaryBtn" if primary else "SecondaryBtn")
         btn.setFont(get_font(12, QFont.Weight.Bold if primary else QFont.Weight.Normal))
         btn.setFixedHeight(36)
         btn.setMinimumWidth(110)
-        if primary:
-            btn.setStyleSheet(f"""
-                QPushButton {{ background:{c["accent"]}; color:#fff; border:none; border-radius:8px; padding:0 18px; }}
-                QPushButton:hover {{ background:{c["accent_hover"]}; }}
-                QPushButton:pressed {{ background:{c["accent_dark"]}; }}
-                QPushButton:disabled {{ background:{c["border"]}; color:{c["text_muted"]}; }}
-            """)
-        else:
-            btn.setStyleSheet(f"""
-                QPushButton {{ background:transparent; color:{c["text_secondary"]}; border:1px solid {c["border"]}; border-radius:8px; padding:0 16px; }}
-                QPushButton:hover {{ background:rgba(127,127,127,0.07); color:{c["text_primary"]}; border-color:{c["text_muted"]}; }}
-                QPushButton:disabled {{ color:{c["text_muted"]}; }}
-            """)
         return btn
 
     def _make_combo(self, width: int = 230) -> QComboBox:
+        from PyQt6.QtWidgets import QListView
         c = QComboBox()
+        c.setView(QListView())
         c.setFont(get_font(12))
         c.setMinimumWidth(width)
         return c
@@ -208,9 +310,8 @@ QProgressBar::chunk {{
         root.setSpacing(0)
 
         # ===== هدر =====
-        colors, _ = self._get_theme_colors()
         header = QWidget()
-        header.setStyleSheet(f"background-color: {colors['bg_card']}; border-bottom: 1px solid {colors['border']};")
+        header.setObjectName("SettingsHeader")
         hl = QVBoxLayout(header)
         hl.setContentsMargins(22, 16, 22, 16)
         hl.setSpacing(2)
@@ -239,7 +340,7 @@ QProgressBar::chunk {{
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         body = QWidget()
-        body.setStyleSheet(f"background-color: {colors['bg']};")
+        body.setObjectName("SettingsBody")
         bl = QVBoxLayout(body)
         bl.setContentsMargins(18, 16, 18, 16)
         bl.setSpacing(12)
@@ -268,14 +369,13 @@ QProgressBar::chunk {{
         # ---- کارت ۲: Streaming ----
         c2 = SectionCard("⚡ Streaming (تبدیل همزمان مثل Gboard)")
         hint = QLabel("هر چند ثانیه یک قطعه صوتی به Google ارسال شده و متن بلافاصله تایپ می‌شود.")
+        hint.setObjectName("SettingsHint")
         hint.setFont(get_font(11)); hint.setWordWrap(True)
-        hint.setStyleSheet(f"color: {colors['text_muted']}; background: transparent;")
         c2.body_layout.addWidget(hint)
 
         row_ch = QHBoxLayout(); row_ch.addWidget(self._make_label("طول هر قطعه:"))
         self.chunk_lbl = QLabel("۱.۵ ثانیه")
-        self.chunk_lbl.setFont(get_font(11, QFont.Weight.Bold))
-        self.chunk_lbl.setStyleSheet(f"color: {colors['mic_listening']}; background: transparent; min-width: 70px;")
+        self.chunk_lbl.setObjectName("ChunkLbl")
         self.chunk_slider = QSlider(Qt.Orientation.Horizontal)
         self.chunk_slider.setRange(10, 40)
         self.chunk_slider.valueChanged.connect(lambda v: self.chunk_lbl.setText(f"{'%.1f' % (v/10)} ثانیه"))
@@ -287,8 +387,7 @@ QProgressBar::chunk {{
 
         row_s = QHBoxLayout(); row_s.addWidget(self._make_label("مدت سکوت:"))
         self.silence_lbl = QLabel("۰.۸ ثانیه")
-        self.silence_lbl.setFont(get_font(11, QFont.Weight.Bold))
-        self.silence_lbl.setStyleSheet(f"color: {colors['accent']}; background: transparent; min-width: 70px;")
+        self.silence_lbl.setObjectName("SilenceLbl")
         self.silence_slider = QSlider(Qt.Orientation.Horizontal)
         self.silence_slider.setRange(5, 25)
         self.silence_slider.valueChanged.connect(lambda v: self.silence_lbl.setText(f"{'%.1f' % (v/10)} ثانیه"))
@@ -304,8 +403,8 @@ QProgressBar::chunk {{
         row_hk.addWidget(self.hotkey_edit); c3.body_layout.addLayout(row_hk)
 
         self.hotkey_warn = QLabel("")
+        self.hotkey_warn.setObjectName("HotkeyWarn")
         self.hotkey_warn.setFont(get_font(11))
-        self.hotkey_warn.setStyleSheet("color: #f85149; background: transparent;")
         self.hotkey_warn.setWordWrap(True)
         c3.body_layout.addWidget(self.hotkey_warn)
 
@@ -323,6 +422,7 @@ QProgressBar::chunk {{
         self.theme_combo.addItem("🌗 پیروی از تنظیمات ویندوز (پیشنهادی)", "system")
         self.theme_combo.addItem("🌑 تاریک (Dark)", "dark")
         self.theme_combo.addItem("🌕 روشن (Light)", "light")
+        self.theme_combo.currentIndexChanged.connect(self._on_theme_selection_changed)
         row_th.addWidget(self.theme_combo); c4.body_layout.addLayout(row_th)
 
         self.sounds_check = self._make_check("افکت صوتی هنگام شروع/پایان ضبط")
@@ -367,7 +467,7 @@ QProgressBar::chunk {{
 
         # ===== فوتر =====
         footer = QWidget()
-        footer.setStyleSheet(f"background-color: {colors['bg_card']}; border-top: 1px solid {colors['border']};")
+        footer.setObjectName("SettingsFooter")
         fl = QHBoxLayout(footer)
         fl.setContentsMargins(18, 10, 18, 10)
         fl.setSpacing(8)
@@ -416,8 +516,10 @@ QProgressBar::chunk {{
         self.hotkey_edit.setText(config.get("hotkey", "ctrl+alt+v"))
         idx = self.inject_combo.findData(config.get("injection_method", "clipboard"))
         if idx >= 0: self.inject_combo.setCurrentIndex(idx)
+        self.theme_combo.blockSignals(True)
         idx = self.theme_combo.findData(config.get("theme", "system"))
         if idx >= 0: self.theme_combo.setCurrentIndex(idx)
+        self.theme_combo.blockSignals(False)
         self.sounds_check.setChecked(bool(config.get("audio_feedback", True)))
         self.autostart_check.setChecked(is_autostart_enabled())
         self.update_on_start_check.setChecked(bool(config.get("check_updates_on_start", True)))

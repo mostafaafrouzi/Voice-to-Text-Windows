@@ -1,4 +1,5 @@
 import io
+import queue
 import threading
 import time
 import speech_recognition as sr
@@ -19,9 +20,9 @@ class SpeechState:
 
 class StreamingSpeechEngine:
     """
-    موتور Streaming تشخیص گفتار — مشابه رفتار دقیق کیبورد گوگل (Gboard) در اندروید.
-    هر قطعه صوتی بلافاصله به Google Speech API ارسال شده و متن همزمان با صحبت
-    در برنامه فعال تایپ می‌شود.
+    موتور هوشمند تبدیل گفتار به متن — دقیقاً مشابه کیبورد گوگل (Gboard) در اندروید.
+    قطعات گفتاری را به ترتیب دریافت کرده، با Google Cloud Speech API به متن تبدیل
+    می‌کند و بلافاصله به مکان‌نمای فعال کاربر تزریق می‌نماید.
     """
 
     def __init__(self, on_state_change=None, on_level_change=None, on_result=None):
@@ -32,19 +33,28 @@ class StreamingSpeechEngine:
         self._state = SpeechState.IDLE
         self._recognizer = sr.Recognizer()
         self._lock = threading.Lock()
-        self._session_texts = []  # تمام متن‌های تایپ‌شده در یک جلسه
-        self._transcribe_pool_lock = threading.Lock()
-        self._active_transcribes = 0
+
+        # صف پردازش متوالی تا کلمات به ترتیب ارسال و تایپ شوند
+        self._queue = queue.Queue()
+        self._worker_thread = None
+        self._stop_worker = False
 
         self._recorder = StreamingAudioRecorder(
             on_level_callback=self._handle_audio_level,
             on_chunk_ready=self._handle_chunk_ready,
-            on_silence_detected=self._handle_session_ended
+            on_silence_detected=self._handle_silence_detected
         )
+
+        self._start_worker()
 
     @property
     def state(self) -> str:
         return self._state
+
+    def _start_worker(self):
+        self._stop_worker = False
+        self._worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
+        self._worker_thread.start()
 
     def _set_state(self, new_state: str, message: str = ""):
         self._state = new_state
@@ -62,55 +72,48 @@ class StreamingSpeechEngine:
                 pass
 
     def _handle_chunk_ready(self, wav_bytes: bytes):
-        """
-        هر قطعه صوتی آماده شد — بلافاصله در یک ترد جداگانه به API ارسال کن.
-        این عملیات بلوک‌کننده نیست و ضبط ادامه می‌یابد.
-        """
-        if not wav_bytes or len(wav_bytes) < 2000:
+        """دریافت یک قطعه صوتی و قرار دادن آن در صف پردازش ترتیبی."""
+        if not wav_bytes or len(wav_bytes) < 3000:
             return
+        self._queue.put(wav_bytes)
 
-        with self._transcribe_pool_lock:
-            self._active_transcribes += 1
+    def _handle_silence_detected(self):
+        """سکوت پایانی کاربر تشخیص داده شد."""
+        self.stop_and_finalize()
 
-        # نمایش وضعیت ترکیبی: در حال گوش دادن + پردازش
-        if self._state == SpeechState.LISTENING:
-            self._set_state(SpeechState.LISTENING, "در حال تبدیل...")
+    def _worker_loop(self):
+        """حلقه کاری پردازش ترتیبی صف قطعات صوتی."""
+        while not self._stop_worker:
+            try:
+                wav_bytes = self._queue.get(timeout=0.2)
+            except queue.Empty:
+                continue
 
-        t = threading.Thread(
-            target=self._transcribe_and_inject,
-            args=(wav_bytes,),
-            daemon=True
-        )
-        t.start()
+            try:
+                self._process_chunk(wav_bytes)
+            except Exception as e:
+                print(f"[Engine] Worker error: {e}")
+            finally:
+                self._queue.task_done()
 
-    def _handle_session_ended(self):
-        """جلسه صوتی به پایان رسید — انتظار برای پایان تمام پردازش‌های در حال اجرا."""
-        # صبر کن تا همه پردازش‌ها تمام شوند
-        max_wait = 8.0
-        start = time.time()
-        while True:
-            with self._transcribe_pool_lock:
-                if self._active_transcribes <= 0:
-                    break
-            if time.time() - start > max_wait:
-                break
-            time.sleep(0.05)
+                # اگر ضبط متوقف شده و صف خالی شد، پایان جلسه را اعلام کن
+                if not self._recorder.is_recording and self._queue.empty():
+                    if self._state != SpeechState.ERROR:
+                        play_stop_sound()
+                        self._set_state(SpeechState.IDLE, "")
 
-        play_stop_sound()
-        self._session_texts.clear()
-        self._set_state(SpeechState.IDLE, "")
+    def _process_chunk(self, wav_bytes: bytes):
+        language = config.get("language", "fa-IR")
+        enable_punct = config.get("enable_persian_punctuation", True)
+        enable_half = config.get("enable_half_space", True)
+        persian_digits = config.get("persian_digits", False)
 
-    def _transcribe_and_inject(self, wav_bytes: bytes):
         try:
-            language = config.get("language", "fa-IR")
-            enable_punct = config.get("enable_persian_punctuation", True)
-            enable_half = config.get("enable_half_space", True)
-            persian_digits = config.get("persian_digits", False)
-
             with io.BytesIO(wav_bytes) as buf:
                 with sr.AudioFile(buf) as source:
                     audio_data = self._recognizer.record(source)
 
+            # فراخوانی Google Cloud Speech Recognition
             raw_text = self._recognizer.recognize_google(audio_data, language=language)
 
             if not raw_text or not raw_text.strip():
@@ -127,10 +130,8 @@ class StreamingSpeechEngine:
             if not cleaned_text:
                 return
 
-            # تزریق فوری — این بخش قلب Streaming است
+            # تزریق آنی متن در فیلد متنی فعال
             inject_text(cleaned_text + " ")
-
-            self._session_texts.append(cleaned_text)
 
             if self.on_result:
                 try:
@@ -139,29 +140,24 @@ class StreamingSpeechEngine:
                     pass
 
         except sr.UnknownValueError:
-            # صدا وجود داشت ولی قابل تشخیص نبود — به آرامی رد می‌شود
+            # صدای نامفهوم — رد می‌شود
             pass
 
         except sr.RequestError as e:
-            print(f"[Engine] Google Speech API error: {e}")
+            print(f"[Engine] Google Speech API RequestError: {e}")
             play_cancel_sound()
-            self._set_state(SpeechState.ERROR, "خطا در اتصال به سرور گوگل. اینترنت را بررسی کنید.")
+            self._set_state(SpeechState.ERROR, "خطا در اتصال به اینترنت برای تشخیص گفتار")
             time.sleep(2.0)
             if self._state == SpeechState.ERROR:
                 self._set_state(SpeechState.IDLE if not self._recorder.is_recording else SpeechState.LISTENING, "")
 
         except Exception as e:
-            print(f"[Engine] Unexpected error: {e}")
-
-        finally:
-            with self._transcribe_pool_lock:
-                self._active_transcribes = max(0, self._active_transcribes - 1)
+            print(f"[Engine] Transcribe exception: {e}")
 
     def start_listening(self):
         with self._lock:
             if self._state == SpeechState.LISTENING or self._recorder.is_recording:
                 return
-            self._session_texts.clear()
             mic_index = config.get("microphone_index")
             play_start_sound()
             self._set_state(SpeechState.LISTENING, "در حال گوش دادن...")
@@ -173,15 +169,23 @@ class StreamingSpeechEngine:
                 return
             self._recorder.stop()
 
-        # بعد از توقف، منتظر می‌مانیم تا پردازش‌های در حال اجرا تمام شوند
-        threading.Thread(target=self._handle_session_ended, daemon=True).start()
+        # اگر صف خالی است، فوراً خاتمه بده؛ اگر هنوز آیتم دارد، ورکر پس از اتمام خارج می‌شود
+        if self._queue.empty():
+            play_stop_sound()
+            self._set_state(SpeechState.IDLE, "")
 
     def cancel(self):
         with self._lock:
             if self._recorder.is_recording:
                 self._recorder.stop()
+            # خالی کردن صف آیتم‌های منتظر
+            while not self._queue.empty():
+                try:
+                    self._queue.get_nowait()
+                    self._queue.task_done()
+                except Exception:
+                    break
         play_cancel_sound()
-        self._session_texts.clear()
         self._set_state(SpeechState.IDLE, "")
 
     def toggle(self):
@@ -191,5 +195,4 @@ class StreamingSpeechEngine:
             self.start_listening()
 
 
-# Export با نام قبلی برای compatibility
 SpeechEngine = StreamingSpeechEngine

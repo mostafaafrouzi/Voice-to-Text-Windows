@@ -30,8 +30,30 @@ def main():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller>=6.0"])
 
     # ساخت فایل .spec
-    fonts_path = assets_dir / "fonts"
     datas = []
+
+    # اضافه کردن فایل‌های speech_recognition (شامل flac-win32.exe جهت تبدیل FLAC)
+    try:
+        from PyInstaller.utils.hooks import collect_data_files
+        sr_datas = collect_data_files('speech_recognition')
+        for src, dest in sr_datas:
+            datas.append(f"(r'{src}', r'{dest}')")
+        print(f"[OK] {len(sr_datas)} speech_recognition data files (including flac-win32.exe) collected.")
+    except Exception as e:
+        print(f"[WARNING] Could not collect speech_recognition data files: {e}")
+
+    # اضافه کردن آیکون‌ها و دارایی‌های برنامه
+    ico_file = assets_dir / "icon.ico"
+    png_file = assets_dir / "icon.png"
+    check_file = assets_dir / "check.png"
+    fonts_path = assets_dir / "fonts"
+
+    if ico_file.exists():
+        datas.append(f"(r'{ico_file}', 'assets')")
+    if png_file.exists():
+        datas.append(f"(r'{png_file}', 'assets')")
+    if check_file.exists():
+        datas.append(f"(r'{check_file}', 'assets')")
 
     if fonts_path.exists():
         # اضافه کردن تمام فایل‌های فونت
@@ -47,7 +69,9 @@ def main():
     else:
         print("[WARNING] fonts directory not found — UI will fall back to Segoe UI.")
 
-    datas_str = ",\n    ".join(datas)
+    datas_str = ",\n        ".join(datas)
+
+    icon_spec = f"r'{ico_file}'" if ico_file.exists() else "None"
 
     spec_content = f"""# -*- mode: python ; coding: utf-8 -*-
 # VoiceToText Windows 11 — PyInstaller Spec File (Auto-generated)
@@ -114,7 +138,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
+    icon={icon_spec},
     version_file=None,
     uac_admin=False,
 )

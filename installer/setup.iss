@@ -2,7 +2,7 @@
 ; Generated automatically by build_installer.py
 
 #define AppName "Voice-to-Text Windows"
-#define AppVersion "2.0.0"
+#define AppVersion "2.1.0"
 #define AppPublisher "Mostafa Afrouzi"
 #define AppURL "https://github.com/mostafaafrouzi/Voice-to-Text-Windows"
 #define AppExeName "VoiceToText.exe"
@@ -25,7 +25,7 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=..\dist
 OutputBaseFilename=VoiceToText-Setup-v{#AppVersion}
-SetupIconFile=
+SetupIconFile=..\assets\icon.ico
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
@@ -55,8 +55,8 @@ Name: "startupentry"; Description: "Start &automatically with Windows"; GroupDes
 Source: "..\dist\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Comment: "Voice-to-Text Windows 11"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon; Comment: "Voice-to-Text Windows 11"
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppExeName}"; Comment: "Voice-to-Text Windows 11"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon; IconFilename: "{app}\{#AppExeName}"; Comment: "Voice-to-Text Windows 11"
 
 [Registry]
 ; Startup entry (if user selected it during install)

@@ -1,12 +1,18 @@
 <div align="center">
 
-<img src="https://img.shields.io/github/v/release/mostafaafrouzi/Voice-to-Text-Windows?style=for-the-badge&label=Latest%20Release&color=2f81f7" alt="Latest Release">
-<img src="https://img.shields.io/github/actions/workflow/status/mostafaafrouzi/Voice-to-Text-Windows/release.yml?style=for-the-badge&label=Build" alt="Build Status">
-<img src="https://img.shields.io/github/downloads/mostafaafrouzi/Voice-to-Text-Windows/total?style=for-the-badge&label=Downloads&color=3fb950" alt="Downloads">
-<img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4.svg?style=for-the-badge&logo=windows" alt="Windows">
-<img src="https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?style=for-the-badge&logo=python" alt="Python">
-<img src="https://img.shields.io/badge/UI-PyQt6%20Fluent-41CD52.svg?style=for-the-badge&logo=qt" alt="PyQt6">
-<img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+<a href="https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest">
+  <img src="https://img.shields.io/github/v/release/mostafaafrouzi/Voice-to-Text-Windows?style=for-the-badge&logo=github&color=2f81f7" alt="Latest Release">
+</a>
+<a href="https://github.com/mostafaafrouzi/Voice-to-Text-Windows/actions">
+  <img src="https://img.shields.io/github/actions/workflow/status/mostafaafrouzi/Voice-to-Text-Windows/release.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white" alt="Build Status">
+</a>
+<a href="https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases">
+  <img src="https://img.shields.io/github/downloads/mostafaafrouzi/Voice-to-Text-Windows/total?style=for-the-badge&logo=windows&color=3fb950" alt="Downloads">
+</a>
+<img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078d4?style=for-the-badge&logo=windows&logoColor=white" alt="Platform">
+<a href="LICENSE">
+  <img src="https://img.shields.io/badge/License-MIT-f39c12?style=for-the-badge" alt="License">
+</a>
 
 <br><br>
 
@@ -15,10 +21,10 @@
 
 > **Replicating the seamless, instantaneous voice typing experience of Google Keyboard (Gboard) and Android Speech Services across all Windows apps — 100% Free, no API keys, and no heavy offline models required.**
 
-[Download Installer](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) • 
-[Release Notes](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases) • 
-[Report Bug](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/issues) • 
-[راهنمای فارسی](README.md)
+[⬇ Download Installer (Setup)](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) • 
+[📋 Release Notes](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases) • 
+[🐛 Report Bug / Feature Request](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/issues) • 
+[🇮🇷 راهنمای فارسی (Persian)](README.md)
 
 </div>
 
@@ -26,9 +32,13 @@
 
 ## 🌟 Why Voice-to-Text Windows?
 
-On Android, Google Keyboard (**Gboard**) and **Google Speech Services** offer one of the fastest, most accurate voice typing experiences in the world, especially for languages like Persian (Farsi) and English. Windows 11's built-in voice typing lacks good Persian language support, and offline alternatives require downloading multi-gigabyte models and running heavy GPU inference.
+On Android devices, Google Keyboard (**Gboard**) and **Google Speech Services** deliver one of the fastest, most accurate voice typing experiences in the world, particularly for languages like Persian (Farsi) and English. 
 
-**Voice-to-Text Windows** bridges this gap: a modern, lightweight, free, and lightning-fast voice typing assistant for Windows 10/11. Powered by Google's cloud speech recognition engine, it activates anywhere with a single global shortcut (`Ctrl + Alt + V`) and streams transcribed text directly into whatever text field you are typing in (Word, Telegram, WhatsApp, Chrome, VS Code, Discord, etc.).
+On Windows, however:
+- The default built-in voice typing (`Win + H`) has very poor or non-existent Persian language dictation.
+- Third-party alternatives are often expensive subscription services, or require downloading multi-gigabyte models that hog GPU and RAM.
+
+**Voice-to-Text Windows** solves this: a modern, lightweight, free, and lightning-fast voice dictation assistant for Windows 10 & 11. Powered by Google's cloud speech recognition engine, it activates anywhere with a single global shortcut (`Ctrl + Alt + V`) and streams transcribed text directly into whatever text field you are typing in (Word, Telegram, WhatsApp, Chrome, VS Code, Discord, etc.).
 
 ---
 
@@ -37,6 +47,7 @@ On Android, Google Keyboard (**Gboard**) and **Google Speech Services** offer on
 | Feature | Description |
 | :--- | :--- |
 | ⚡ **Real-Time Streaming Dictation** | Transcribes speech incrementally as you talk — just like Gboard on Android |
+| 🧠 **Intelligent VAD (Pause Detection)** | Audio is chunked during natural sentence pauses so words are never cut in half during fast speech |
 | 🌐 **Bilingual (Persian & English)** | Flawless accuracy for Persian (`fa-IR`) and English (`en-US`) with instant one-click switching |
 | 🎯 **Universal Compatibility** | Works across any input field in any application (Word, Browser, Telegram, Slack, etc.) |
 | 🎨 **Windows 11 Fluent Acrylic UI** | Modern floating capsule widget with smooth drop shadows, draggable anywhere on screen |
@@ -44,7 +55,7 @@ On Android, Google Keyboard (**Gboard**) and **Google Speech Services** offer on
 | 🌊 **Audio Waveform Visualizer** | Smooth 30 FPS visualizer responsive to real-time microphone amplitude |
 | ✍️ **Intelligent Spoken Punctuation** | Say "period", "comma", "question mark", "new line" (or Persian equivalents) to insert punctuation |
 | 📐 **Persian Half-Space Normalization** | Automatically normalizes Persian half-spaces (نیم‌فاصله) for «می‌شود», «کتاب‌ها», «سریع‌تر» |
-| 🌓 **Adaptive Theme (Dark/Light/System)**| Seamlessly follows Windows 11 theme preferences or allows manual override |
+| 🌓 **Adaptive Theme (Dark/Light/System)**| Seamlessly follows Windows 11 theme preferences or allows manual override with live preview |
 | 🕒 **System Tray & Startup Integration** | Lives quietly next to the clock; configurable via Windows Taskbar settings & run on startup |
 | 🔄 **Automatic & Manual Updates** | Background update checker on launch + manual check in settings with 1-click update |
 | 📦 **No Python Required** | Distributed as a standalone `.exe` and official Windows Installer (`Setup.exe`) |
@@ -101,98 +112,77 @@ On Android, Google Keyboard (**Gboard**) and **Google Speech Services** offer on
 
 ---
 
-## ⚙ Settings & Customization
+## ⚙ Settings Dialog
 
-Open settings by right-clicking the System Tray icon → **Settings**, or clicking the ⚙ icon on the floating widget:
-
-- **Speech & Language:** Select default language (`fa-IR` or `en-US`), input microphone, and enable Persian typography / digit rules.
-- **Streaming & Silence Detection:** Adjust audio chunk duration (1.0 – 4.0s) and silence timeout for automatic stopping.
-- **Global Hotkey:** Change `Ctrl+Alt+V` to any custom key combination (e.g. `F8`, `Ctrl+Shift+Space`). Warns automatically if a shortcut is reserved by Windows.
-- **Appearance & Theme:** Choose between System Default (adapts to Windows Dark/Light mode), Dark, or Light.
-- **Updates:** Check for the latest releases from GitHub with 1-click download and install.
+Access the settings by clicking the ⚙ gear button on the floating pill or right-clicking the System Tray icon:
+- **Language selection:** Persian (`fa-IR`) or English (`en-US`).
+- **Microphone selection:** Default system mic or specific audio input hardware.
+- **Custom Hotkey:** Change `Ctrl + Alt + V` to any preferred shortcut (with reserved Windows key validation).
+- **Streaming audio tuning:** Adjust slice length (1.0s - 4.0s) and silence timeout detection.
+- **Theme Selection:** System Sync, Force Dark, or Force Light mode with live instantaneous UI preview.
+- **Persian Text Normalization:** Toggle spoken punctuation, Persian digits, and half-space rules.
+- **Autostart:** Start minimized to System Tray on Windows boot.
+- **Updates:** Check for new releases and perform 1-click automatic in-app updates.
 
 ---
 
-## 🛠 Building from Source (Developers)
+## 💻 Developer & Build Guide
 
 ```bash
-# 1. Clone the repository
+# Clone the repository
 git clone https://github.com/mostafaafrouzi/Voice-to-Text-Windows.git
 cd Voice-to-Text-Windows
 
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. Run application
+# Run from source
 python main.py
 ```
 
-### Build Standalone EXE:
+### Build Standalone Executable:
 ```bash
 python build_exe.py
-# Output: dist/VoiceToText.exe
+# Compiled binary located at: dist/VoiceToText.exe
 ```
 
 ### Build Windows Installer:
 ```bash
 python build_installer.py
-# Output: dist/VoiceToText-Setup-v2.0.0.exe
+# Requires Inno Setup 6: generates dist/VoiceToText-Setup-vX.X.X.exe
 ```
 
 ---
 
-## 🏗 Architecture
+## ❓ Frequently Asked Questions (FAQ)
 
-```
-Voice-to-Text-Windows/
-├── app/
-│   ├── core/
-│   │   ├── engine.py        # Real-time streaming speech engine (Google Speech API)
-│   │   ├── audio_meter.py   # Streaming audio capture & real-time RMS meter
-│   │   ├── text_cleaner.py  # Spoken punctuation processor & Persian half-space normalizer
-│   │   ├── injector.py      # Focus-safe fast text injection via clipboard simulation
-│   │   ├── hotkey.py        # Global asynchronous hotkey manager
-│   │   ├── updater.py       # GitHub Releases auto-update checker & installer
-│   │   └── autostart.py     # Windows Startup Registry manager (HKCU)
-│   ├── ui/
-│   │   ├── pill_widget.py   # Windows 11 Fluent floating capsule widget
-│   │   ├── wave_widget.py   # Real-time 30 FPS audio waveform visualizer
-│   │   ├── settings_win.py  # Comprehensive Fluent settings dialog
-│   │   ├── tray_icon.py     # Windows System Tray manager with quick menu
-│   │   ├── theme_manager.py # Dark/Light/System theme engine
-│   │   └── fonts.py         # Vazirmatn font loader
-│   ├── config.py            # Persistent settings manager (%APPDATA%)
-│   └── version.py           # Central version metadata
-├── assets/fonts/            # Embedded Vazirmatn font files
-├── installer/setup.iss      # Inno Setup Windows installer script
-├── .github/workflows/       # Automated CI/CD GitHub Actions release pipeline
-├── tests/                   # Comprehensive automated test suite
-├── build_exe.py             # PyInstaller standalone EXE builder
-├── build_installer.py       # Local Inno Setup installer builder
-└── main.py                  # Single-instance application entry point
-```
+<details>
+<summary><b>Does this require an API key or credit card?</b></summary>
+No. The app connects to the public Google Speech Recognition endpoint, requiring no API key and no payments.
+</details>
 
----
+<details>
+<summary><b>Will fast speaking drop words?</b></summary>
+No. Our custom Voice Activity Detection (VAD) buffer synchronizes with sentence rhythm and natural speech pauses, avoiding arbitrary mid-word audio cuts.
+</details>
 
-## 🧪 Testing
-
-Run all automated unit tests:
-```bash
-python -m unittest discover -s tests -v
-```
+<details>
+<summary><b>Does the floating widget block application clicks?</b></summary>
+No. The widget uses Win32 <code>WS_EX_NOACTIVATE</code>, meaning clicks and keystrokes are preserved in your target application. You can also hide the widget with the ✕ button to run purely via the tray icon and shortcut.
+</details>
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is open source and licensed under the [MIT License](LICENSE).
 
 ---
 
 <div align="center">
 
-Made with ❤️ by [Mostafa Afrouzi](https://github.com/mostafaafrouzi)
+Built with ❤️ by [Mostafa Afrouzi](https://github.com/mostafaafrouzi)
 
-⭐ Star this repository if you find it helpful!
+⭐ If you find this project useful, please consider giving it a star on GitHub!
 
 </div>

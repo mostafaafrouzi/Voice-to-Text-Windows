@@ -11,9 +11,8 @@ SAMPLE_RATE = 16000
 CHANNELS = 1
 FORMAT = pyaudio.paInt16
 
-# اندازه هر پنجره کوچک ضبط (به نمونه) — تعادل بین تاخیر و کیفیت
-WINDOW_SAMPLES = 4096   # ~256ms per chunk for level reading
-STREAM_CHUNK_SECS = 1.5  # هر چند ثانیه یک قطعه برای Streaming استخراج می‌شود
+# اندازه پنجره نمونه‌برداری بلادرنگ — 1024 نمونه معادل 64 میلی‌ثانیه برای ویژوالایزر نرم
+WINDOW_SAMPLES = 1024
 
 
 def get_input_devices() -> list[dict]:
@@ -49,9 +48,9 @@ def get_input_devices() -> list[dict]:
 
 class StreamingAudioRecorder:
     """
-    ضبط‌کننده Streaming بلادرنگ صوتی.
-    صدا را در قطعات کوچک ضبط کرده و هر قطعه را از طریق callback به موتور
-    تشخیص گفتار ارسال می‌کند تا تبدیل همزمان با صحبت انجام شود (مثل Gboard).
+    ضبط‌کننده هوشمند صوتی با تفکیک عبارات بر اساس مکث‌های طبیعی صحبت (VAD).
+    به جای بریدن کورکورانه کلمات در زمان‌های ثابت، پایان هر عبارت یا مکث کاربر را
+    تشخیص داده و صدا را کامل به موتور گفتار ارسال می‌کند تا هیچ کلمه‌ای جا نماند.
     """
 
     def __init__(
@@ -75,25 +74,27 @@ class StreamingAudioRecorder:
         return self._is_recording
 
     def start(self, device_index: int | None = None):
-        if self._is_recording:
-            return
-        self._is_recording = True
-        self._thread = threading.Thread(
-            target=self._record_loop,
-            args=(device_index,),
-            daemon=True
-        )
-        self._thread.start()
+        with self._lock:
+            if self._is_recording:
+                return
+            self._is_recording = True
+            self._thread = threading.Thread(
+                target=self._record_loop,
+                args=(device_index,),
+                daemon=True
+            )
+            self._thread.start()
 
     def stop(self):
-        self._is_recording = False
+        with self._lock:
+            self._is_recording = False
         if self._thread and self._thread.is_alive():
-            self._thread.join(timeout=1.0)
+            self._thread.join(timeout=1.5)
 
     def _record_loop(self, device_index: int | None):
         self._p = pyaudio.PyAudio()
-        silence_timeout = float(config.get("silence_timeout", 0.85))
-        energy_threshold = float(config.get("energy_threshold", 280))
+        silence_timeout = float(config.get("silence_timeout", 1.2))
+        auto_stop = bool(config.get("auto_stop_on_silence", True))
 
         stream_kwargs = {
             "format": FORMAT,
@@ -113,18 +114,21 @@ class StreamingAudioRecorder:
             self._p.terminate()
             return
 
-        # بافرهای جداگانه
-        chunk_frames = []  # بافر قطعه جاری که به API ارسال می‌شود
-        pre_buffer = []    # بافر پیش-صحبت (قبل از تشخیص صدا)
-        PRE_BUF_MAX = 4    # تعداد پنجره‌های پیش-بافر (~256ms × 4 = 1s)
+        # بافرهای صدا
+        chunk_frames = []
+        pre_buffer = []
+        PRE_BUF_MAX = 6   # نگهداری حدود ۳۸۰ میلی‌ثانیه قبل از شروع صحبت
 
-        speech_started = False
+        # متغیرهای ردیابی نویز محیط و آستانه صدا
+        ambient_rms = 120.0
+        alpha = 0.95      # ضریب فیلتر پایین‌گذر برای سطح نویز زمینه
+
+        speech_active = False
+        speech_start_time = 0.0
         last_voice_time = time.time()
-        chunk_start_time = time.time()
-
-        # Streaming Chunk Size: هر n ثانیه ارسال کن
-        chunk_secs = float(config.get("stream_chunk_secs", STREAM_CHUNK_SECS))
-        auto_stop = bool(config.get("auto_stop_on_silence", True))
+        pause_threshold = 0.42  # مکث طبیعی بین عبارات (۴۲۰ میلی‌ثانیه)
+        min_speech_duration = 0.5  # حداقل طول صحبت برای ارسال به عنوان یک قطعه
+        max_phrase_duration = 7.0  # حداکثر طول یک قطعه بدون مکث
 
         try:
             while self._is_recording:
@@ -137,52 +141,68 @@ class StreamingAudioRecorder:
                 if not data:
                     continue
 
+                # محاسبه RMS صدا
                 samples = np.frombuffer(data, dtype=np.int16)
-                rms = float(np.sqrt(np.mean(samples.astype(np.float32) ** 2))) if len(samples) > 0 else 0.0
-                norm_level = min(1.0, max(0.0, (rms - 60) / 1200.0))
+                if len(samples) > 0:
+                    rms = float(np.sqrt(np.mean(samples.astype(np.float32) ** 2)))
+                else:
+                    rms = 0.0
 
+                now = time.time()
+
+                # به‌روزرسانی نویز زمینه فقط وقتی صحبت نمی‌شود
+                if not speech_active:
+                    ambient_rms = alpha * ambient_rms + (1.0 - alpha) * rms
+
+                # آستانه تشخیص صدای صحبت
+                dynamic_threshold = max(240.0, ambient_rms * 1.8)
+                is_voice = rms > dynamic_threshold
+
+                # ارسال شدت صدا به ویژوالایزر (نرم‌شده)
+                norm_level = min(1.0, max(0.0, (rms - ambient_rms) / 1400.0))
                 if self.on_level_callback:
                     try:
                         self.on_level_callback(norm_level)
                     except Exception:
                         pass
 
-                now = time.time()
-                is_voice = rms > energy_threshold
-
                 if is_voice:
-                    if not speech_started:
-                        speech_started = True
-                        chunk_start_time = now
-                        # بافر پیش-صحبت را به قطعه اضافه کن
+                    if not speech_active:
+                        speech_active = True
+                        speech_start_time = now
+                        # افزودن بافر پیش از شروع صحبت تا هجای آغازین قطع نشود
                         chunk_frames.extend(pre_buffer)
                         pre_buffer.clear()
+
                     last_voice_time = now
                     chunk_frames.append(data)
                 else:
-                    if not speech_started:
-                        # نگه داشتن پیش-بافر چرخشی
+                    if not speech_active:
                         pre_buffer.append(data)
                         if len(pre_buffer) > PRE_BUF_MAX:
                             pre_buffer.pop(0)
                     else:
                         chunk_frames.append(data)
 
-                # ارسال قطعه streaming اگر کافی بود
-                if speech_started and chunk_frames:
-                    elapsed_since_chunk = now - chunk_start_time
-                    silence_since_voice = now - last_voice_time
+                # بررسی اتمام یا ارسال یک عبارت
+                if speech_active and chunk_frames:
+                    silence_duration = now - last_voice_time
+                    phrase_duration = now - speech_start_time
 
-                    should_send = (
-                        elapsed_since_chunk >= chunk_secs or
-                        (auto_stop and silence_since_voice >= silence_timeout)
+                    # شرط ۱: مکث طبیعی بین کلمات/عبارات رخ داده
+                    natural_pause_ready = (
+                        silence_duration >= pause_threshold and
+                        phrase_duration >= min_speech_duration
                     )
 
-                    if should_send:
-                        # ساخت WAV از فریم‌های جاری
+                    # شرط ۲: صحبت طولانی پیوسته (بیش از ۷ ثانیه)
+                    too_long = phrase_duration >= max_phrase_duration and silence_duration >= 0.2
+
+                    if natural_pause_ready or too_long:
+                        # استخراج قطعه کامل
                         frames_to_send = list(chunk_frames)
                         chunk_frames = []
-                        chunk_start_time = now
+                        speech_active = False
 
                         wav_bytes = self._build_wav(frames_to_send)
                         if wav_bytes and self.on_chunk_ready:
@@ -191,14 +211,23 @@ class StreamingAudioRecorder:
                             except Exception as e:
                                 print(f"[StreamingRecorder] on_chunk_ready error: {e}")
 
-                        # اگر سکوت تشخیص داده شد، ضبط متوقف شود
-                        if auto_stop and silence_since_voice >= silence_timeout:
-                            speech_started = False
-                            if self.on_silence_detected:
-                                try:
-                                    self.on_silence_detected()
-                                except Exception:
-                                    pass
+                    # بررسی سکوت طولانی نهایی برای توقف خودکار
+                    if auto_stop and silence_duration >= silence_timeout:
+                        if self.on_silence_detected:
+                            try:
+                                self.on_silence_detected()
+                            except Exception:
+                                pass
+                        break
+
+            # اگر بافر پایانی باقی مانده است، هنگام توقف ارسال شود
+            if chunk_frames and (time.time() - speech_start_time >= min_speech_duration):
+                wav_bytes = self._build_wav(chunk_frames)
+                if wav_bytes and self.on_chunk_ready:
+                    try:
+                        self.on_chunk_ready(wav_bytes)
+                    except Exception:
+                        pass
 
         finally:
             try:
@@ -231,5 +260,4 @@ class StreamingAudioRecorder:
         return buf.getvalue()
 
 
-# حفظ backward compatibility
 AudioRecorder = StreamingAudioRecorder

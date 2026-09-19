@@ -241,7 +241,22 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 
 
 def create_app_icon(color_hex: str = COLOR_ACCENT) -> "QIcon":
+    import os
+    import sys
     from PyQt6.QtGui import QPixmap, QIcon
+
+    # ابتدا بررسی وجود فایل رسمی آیکون ویندوز
+    if getattr(sys, "frozen", False):
+        base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+    else:
+        base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    ico_path = os.path.join(base, "assets", "icon.ico")
+    if os.path.exists(ico_path):
+        icon = QIcon(ico_path)
+        if not icon.isNull():
+            return icon
+
+    # در صورت عدم وجود فایل، رسم پویا در حافظه
     pixmap = QPixmap(64, 64)
     pixmap.fill(Qt.GlobalColor.transparent)
 
@@ -270,3 +285,15 @@ def create_app_icon(color_hex: str = COLOR_ACCENT) -> "QIcon":
 
     painter.end()
     return QIcon(pixmap)
+
+
+def get_check_icon_path() -> str:
+    import os
+    import sys
+    if getattr(sys, "frozen", False):
+        base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+    else:
+        base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    p = os.path.join(base, "assets", "check.png")
+    return p.replace("\\", "/")
+
