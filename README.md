@@ -1,94 +1,186 @@
-# تبدیل گفتار به متن
+<div dir="rtl">
 
 <div align="center">
-  <a href="README.md"><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg" alt="فارسی" width="25"/> فارسی</a> |
-  <a href="README_EN.md"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg" alt="English" width="25"/> English</a>
+
+<img src="https://img.shields.io/github/v/release/mostafaafrouzi/Voice-to-Text-Windows?style=for-the-badge&label=آخرین%20نسخه&color=2f81f7" alt="Latest Release">
+<img src="https://img.shields.io/github/actions/workflow/status/mostafaafrouzi/Voice-to-Text-Windows/release.yml?style=for-the-badge&label=بیلد" alt="Build Status">
+<img src="https://img.shields.io/github/downloads/mostafaafrouzi/Voice-to-Text-Windows/total?style=for-the-badge&label=دانلود&color=3fb950" alt="Downloads">
+<img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078d4?style=for-the-badge&logo=windows" alt="Windows">
+<img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+
+<br><br>
+
+# 🎙 تایپ صوتی هوشمند ویندوز ۱۱
+### **Voice-to-Text Windows**
+
+> **تبدیل گفتار به متن بلادرنگ مثل Google Keyboard (Gboard) — رایگان، برای همه برنامه‌های ویندوز**
+
+[دانلود نصب‌کننده](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) • 
+[مشاهده تغییرات](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases) • 
+[گزارش مشکل](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/issues) •
+[English](README_EN.md)
+
 </div>
 
-برنامه‌ای مدرن و سبک برای تبدیل گفتار به متن با استفاده از مدل‌های تشخیص گفتار Google و Vosk. این برنامه به‌طور خودکار با چیدمان کیبورد ویندوز هماهنگ شده و از چندین زبان پشتیبانی می‌کند.
+---
+
+## ✨ ویژگی‌های کلیدی
+
+| ویژگی | توضیح |
+|-------|-------|
+| ⚡ **Streaming بلادرنگ** | همزمان با صحبت متن تایپ می‌شود — دقیقاً مثل Gboard اندروید |
+| 🌍 **چندزبانه** | پشتیبانی کامل از فارسی ایران و انگلیسی آمریکا |
+| 🎯 **کار در همه‌جا** | در هر فیلد متنی در هر برنامه‌ای (ورد، مرورگر، ایمیل...) |
+| ⌨ **کلید میانبر** | فعال‌سازی سریع با `Ctrl+Alt+V` (قابل تنظیم) |
+| 🔤 **فونت Vazirmatn** | رندر کامل و صحیح متون فارسی |
+| 🌓 **تم خودکار** | تاریک / روشن / پیروی از تنظیمات ویندوز |
+| 📝 **پردازش متن فارسی** | نیم‌فاصله، ویرگول، نقطه و علائم نگارشی صوتی |
+| 🔄 **بروزرسانی خودکار** | بررسی و نصب نسخه جدید با یک کلیک |
+| 📦 **EXE مستقل** | نیازی به نصب Python یا هیچ کتابخانه‌ای نیست |
+| 🔕 **بدون مزاحمت** | آیکون در System Tray، بدون اشغال فوکوس |
 
 ---
 
-## امکانات
-- **تبدیل گفتار به متن به صورت لحظه‌ای**
-- **پشتیبانی از مدل‌های مختلف**: Google و Vosk
-- **هماهنگی خودکار زبان** با چیدمان کیبورد ویندوز
-- **تنظیمات قابل سفارشی‌سازی** برای انتخاب زبان و مدل
-- **میانبر کیبورد جهانی**: `Ctrl + Alt + V` برای فعال یا غیرفعال کردن میکروفون
-- **ایجاد لاگ برای اشکال‌زدایی**
+## 🖥 نمایش برنامه
+
+<div align="center">
+
+> ویجت کپسولی شناور در پایین صفحه — قابل جابجایی، همیشه روی بقیه پنجره‌ها
+
+</div>
 
 ---
 
-## نصب
+## ⬇ نصب و راه‌اندازی
 
-### پیش‌نیازها
-- پایتون نسخه 3.9 یا بالاتر
-- اطمینان از نصب `pip` برای مدیریت وابستگی‌ها
-- یک میکروفون فعال
+### روش ۱: نصب‌کننده (پیشنهادی)
 
-### مراحل
+1. آخرین نسخه `VoiceToText-Setup-vX.X.X.exe` را از [صفحه Releases](https://github.com/mostafaafrouzi/Voice-to-Text-Windows/releases/latest) دانلود کنید
+2. نصب‌کننده را اجرا کنید — نصب کامل، آیکون دسکتاپ، منوی Start
+3. برنامه را از دسکتاپ یا منوی Start اجرا کنید
+
+### روش ۲: فایل قابل‌اجرا مستقل
+
+1. `VoiceToText.exe` را دانلود کنید
+2. مستقیماً اجرا کنید — بدون هیچ نصبی
+
+> **سیستم‌مورد نیاز:**
+> - ویندوز ۱۰ / ۱۱ (۶۴ بیتی)
+> - اتصال به اینترنت (برای Google Speech API)
+> - میکروفون
+
+---
+
+## 🚀 نحوه استفاده
+
+```
+۱. برنامه را اجرا کنید — آیکون در System Tray کنار ساعت ظاهر می‌شود
+۲. فیلد متنی دلخواه خود را انتخاب کنید (در هر برنامه‌ای)
+۳. Ctrl + Alt + V بفشارید — ویجت فعال می‌شود
+۴. صحبت کنید — متن بلافاصله تایپ می‌شود
+۵. دوباره Ctrl + Alt + V بفشارید تا ضبط متوقف شود
+```
+
+---
+
+## ⚙ تنظیمات
+
+از طریق آیکون System Tray ← تنظیمات، یا کلیک روی آیکون ⚙ در ویجت:
+
+| تنظیم | توضیح |
+|-------|-------|
+| **زبان** | فارسی / انگلیسی |
+| **کلید میانبر** | تغییر Ctrl+Alt+V به هر ترکیب دلخواه |
+| **تم** | تاریک / روشن / سیستم |
+| **طول قطعه Streaming** | ۱ تا ۴ ثانیه |
+| **نیم‌فاصله** | اعمال خودکار |
+| **اجرای خودکار با ویندوز** | فعال/غیرفعال |
+| **بروزرسانی** | بررسی دستی یا خودکار هنگام اجرا |
+
+---
+
+## 🔧 اجرا از سورس (برای توسعه‌دهندگان)
+
 ```bash
-git clone https://github.com/your-username/voice-to-text.git
-cd voice-to-text
+git clone https://github.com/mostafaafrouzi/Voice-to-Text-Windows.git
+cd Voice-to-Text-Windows
 pip install -r requirements.txt
-python voice_to_text.py
+python main.py
 ```
 
----
-
-## استفاده
-
-### اجرای برنامه
-1. فایل `voice_to_text.py` را اجرا کنید.
-2. از دکمه 🎤 برای روشن یا خاموش کردن میکروفون استفاده کنید.
-3. یا با فشار دادن `Ctrl + Alt + V` گفتار به متن را شروع یا متوقف کنید.
-
-### تنظیمات
-- شما می‌توانید:
-  - زبان **تشخیص گفتار** را انتخاب کنید (به صورت خودکار با چیدمان کیبورد ویندوز هماهنگ می‌شود).
-  - بین مدل‌های **Google** (آنلاین) و **Vosk** (آفلاین) جابه‌جا شوید.
-
----
-
-## میانبرها
-- **`Ctrl + Alt + V`**: شروع یا توقف تبدیل گفتار به متن.
-
----
-
-## اشکال‌زدایی
-- لاگ‌ها در فایل `debug_log.txt` در دایرکتوری برنامه ذخیره می‌شوند.
-
----
-
-## مشارکت
-لطفاً مخزن را فورک کنید، ویژگی‌های جدید اضافه کنید یا باگ‌ها را رفع کنید. درخواست‌های Pull مورد استقبال قرار می‌گیرند!
-
----
-
-## مجوز
-این پروژه تحت مجوز [MIT](LICENSE) منتشر شده است.
-
----
-
-### وابستگی‌ها
-کتابخانه‌های پایتون زیر برای اجرای این پروژه موردنیاز هستند:
-- `speechrecognition`
-- `vosk`
-- `pynput`
-- `tk`
-- `pyaudio`
-- `pywin32`
-
-آن‌ها را با دستور زیر نصب کنید:
+**ساخت EXE:**
 ```bash
-pip install -r requirements.txt
+python build_exe.py
+# خروجی: dist/VoiceToText.exe
+```
+
+**ساخت Installer:**
+```bash
+python build_exe.py
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\setup.iss
+# خروجی: dist/VoiceToText-Setup-vX.X.X.exe
 ```
 
 ---
 
-### نکات
-```plaintext
-- **مدل Vosk**: اطمینان حاصل کنید که مدل Vosk را دانلود کرده و در دایرکتوری پروژه قرار دهید.
-- **دسترسی‌ها**: برخی از ویژگی‌ها ممکن است به دسترسی‌های مدیریتی نیاز داشته باشند.
-- **زبان‌های پشتیبانی‌شده**: Google Speech Recognition از چندین زبان پشتیبانی می‌کند و زبان به صورت خودکار با چیدمان کیبورد ویندوز هماهنگ می‌شود.
+## 🏗 معماری فنی
+
 ```
+Voice-to-Text-Windows/
+├── app/
+│   ├── core/
+│   │   ├── engine.py        ← موتور Streaming تشخیص گفتار
+│   │   ├── audio_meter.py   ← ضبط‌کننده صوتی streaming
+│   │   ├── text_cleaner.py  ← پردازش متن فارسی (نیم‌فاصله، علائم)
+│   │   ├── injector.py      ← درج متن در برنامه فعال
+│   │   ├── hotkey.py        ← مدیریت کلید میانبر سراسری
+│   │   ├── updater.py       ← بررسی بروزرسانی از GitHub
+│   │   └── autostart.py     ← مدیریت اجرای خودکار ویندوز
+│   ├── ui/
+│   │   ├── pill_widget.py   ← ویجت کپسولی شناور
+│   │   ├── settings_win.py  ← پنجره تنظیمات
+│   │   ├── tray_icon.py     ← System Tray Icon
+│   │   ├── theme_manager.py ← مدیریت تم تاریک/روشن
+│   │   └── fonts.py         ← بارگذاری فونت Vazirmatn
+│   ├── config.py            ← مدیریت تنظیمات (AppData)
+│   └── version.py           ← شماره نسخه
+├── assets/fonts/            ← فونت Vazirmatn
+├── installer/setup.iss      ← اسکریپت Inno Setup
+├── .github/workflows/       ← GitHub Actions CI/CD
+├── tests/                   ← تست‌های واحد
+└── main.py                  ← نقطه ورود اصلی
+```
+
+---
+
+## ❓ سوالات متداول
+
+**آیا نیاز به اتصال اینترنت دارد؟**
+بله — از Google Speech-to-Text API برای تشخیص گفتار استفاده می‌شود. این API رایگان است و نیاز به کلید API ندارد.
+
+**آیا فارسی را کامل پشتیبانی می‌کند؟**
+بله — نیم‌فاصله، علائم نگارشی صوتی، و رندر صحیح با فونت Vazirmatn.
+
+**آیا از Windows Defender بلاک می‌شود؟**
+ممکن است هشدار SmartScreen نمایش داده شود (به دلیل نبود امضای دیجیتال). روی "More info" ← "Run anyway" کلیک کنید.
+
+**چرا متن با تاخیر تایپ می‌شود؟**
+در تنظیمات، "طول هر قطعه Streaming" را کاهش دهید (پیش‌فرض ۱.۵ ثانیه).
+
+---
+
+## 📄 مجوز
+
+این پروژه تحت مجوز [MIT License](LICENSE) منتشر شده است.
+
+---
+
+<div align="center">
+
+ساخته شده با ❤️ توسط [Mostafa Afrouzi](https://github.com/mostafaafrouzi)
+
+⭐ اگر این پروژه مفید بود، ستاره بدید!
+
+</div>
+
+</div>

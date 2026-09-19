@@ -1,0 +1,160 @@
+name: 🚀 Build & Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"        # فقط با انتشار تگ مثل v2.0.0 اجرا می‌شود
+  workflow_dispatch:     # اجرای دستی از پنل گیتهاب
+    inputs:
+      tag:
+        description: "Tag to build (e.g. v2.0.1)"
+        required: false
+
+permissions:
+  contents: write        # برای ایجاد release و آپلود assets
+
+jobs:
+  build:
+    name: Build Windows EXE & Installer
+    runs-on: windows-latest
+
+    steps:
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۱. دریافت کد
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: ⬇ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # تاریخچه کامل برای changelog
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۲. تنظیم محیط Python
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: 🐍 Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۳. نصب وابستگی‌ها
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller>=6.0
+          pip install -r requirements.txt
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۴. دانلود فونت Vazirmatn
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: 🔤 Prepare Vazirmatn font
+        shell: python
+        run: |
+          import os
+          wanted = {"Vazirmatn-Regular.ttf", "Vazirmatn-Medium.ttf",
+                    "Vazirmatn-Bold.ttf", "Vazirmatn-SemiBold.ttf", "Vazirmatn-Light.ttf"}
+          os.makedirs("assets/fonts", exist_ok=True)
+          if all(os.path.exists(f"assets/fonts/{f}") for f in wanted):
+              print("All Vazirmatn font files already present.")
+          else:
+              import urllib.request, zipfile, io
+              url = "https://github.com/rastikerdar/vazirmatn/releases/download/v33.003/Vazirmatn-v33.003.zip"
+              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  data = r.read()
+              with zipfile.ZipFile(io.BytesIO(data)) as z:
+                  for name in z.namelist():
+                      if os.path.basename(name) in wanted:
+                          with z.open(name) as src, open(f"assets/fonts/{os.path.basename(name)}", "wb") as dst:
+                              dst.write(src.read())
+                              print(f"Extracted: {os.path.basename(name)}")
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۵. به‌روزرسانی شماره نسخه در کد
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: 🏷 Update version in code
+        shell: python
+        run: |
+          import re, os
+          tag = os.environ.get("INPUT_TAG") or os.environ.get("GITHUB_REF_NAME", "").lstrip("v")
+          if not re.match(r'^\d+\.\d+', tag):
+              tag = "2.0.0"
+          path = "app/version.py"
+          content = open(path, encoding="utf-8").read()
+          content = re.sub(r'__version__ = "[^"]+"', f'__version__ = "{tag}"', content)
+          open(path, "w", encoding="utf-8").write(content)
+          print(f"Version set to: {tag}")
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۶. ساخت EXE با PyInstaller
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: 🏗 Build standalone EXE
+        run: python build_exe.py
+        env:
+          PYTHONIOENCODING: utf-8
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۷. ساخت Windows Installer با Inno Setup
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: 📦 Build Windows Installer (Inno Setup)
+        run: |
+          $inputTag = "${{ github.event.inputs.tag }}"
+          $refName = "${{ github.ref_name }}"
+          $raw = if ($inputTag) { $inputTag } else { $refName }
+          $version = $raw.TrimStart("v")
+          if ($version -notmatch '^\d+\.\d+') { $version = "2.0.0" }
+          $issFile = "installer\setup.iss"
+          $content = Get-Content $issFile -Raw
+          $content = $content -replace '#define AppVersion "[^"]+"', "#define AppVersion `"$version`""
+          Set-Content $issFile $content
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" $issFile
+          Get-ChildItem dist\*.exe | Select Name, @{N="Size(MB)";E={[math]::Round($_.Length/1MB,1)}}
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۸. بارگذاری artifacts برای قدم بعد
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: ⬆ Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: |
+            dist/VoiceToText.exe
+            dist/VoiceToText-Setup-*.exe
+          if-no-files-found: error
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۹. ایجاد Release با changelog خودکار
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: 🎉 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: "Voice-to-Text Windows ${{ github.event.inputs.tag || github.ref_name }}"
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
+          files: |
+            dist/VoiceToText.exe
+            dist/VoiceToText-Setup-*.exe
+          body: |
+            ## دانلود / Download
+
+            | فایل | توضیح |
+            |------|-------|
+            | `VoiceToText-Setup-${{ github.ref_name }}.exe` | **نصب‌کننده ویندوز (توصیه‌شده)** — نصب کامل با آیکون و منوی Start |
+            | `VoiceToText.exe` | فایل قابل‌اجرای مستقل — بدون نیاز به نصب |
+
+            ## سیستم‌مورد نیاز
+            - ویندوز ۱۰ یا ۱۱ (۶۴ بیتی)
+            - اینترنت (برای تشخیص گفتار از Google Speech API)
+            - میکروفون
+
+            ---
+            *تغییرات این نسخه توسط گیتهاب به‌صورت خودکار از commit‌ها تولید شده‌اند.*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
