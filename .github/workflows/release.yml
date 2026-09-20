@@ -115,19 +115,27 @@ jobs:
           Get-ChildItem dist\*.exe | Select Name, @{N="Size(MB)";E={[math]::Round($_.Length/1MB,1)}}
 
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      # ۸. بارگذاری artifacts برای قدم بعد
+      # ۸. ساخت فایل فشرده قابل حمل (Portable)
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      - name: 🗜 Create Portable ZIP
+        run: |
+          cd dist
+          Compress-Archive -Path VoiceToText -DestinationPath VoiceToText-Portable.zip
+
+      # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      # ۹. بارگذاری artifacts برای قدم بعد
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       - name: ⬆ Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
           path: |
-            dist/VoiceToText.exe
+            dist/VoiceToText-Portable.zip
             dist/VoiceToText-Setup-*.exe
           if-no-files-found: error
 
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      # ۹. ایجاد Release با changelog خودکار
+      # ۱۰. ایجاد Release با changelog خودکار
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       - name: 🎉 Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -139,15 +147,15 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
           files: |
-            dist/VoiceToText.exe
+            dist/VoiceToText-Portable.zip
             dist/VoiceToText-Setup-*.exe
           body: |
             ## دانلود / Download
 
             | فایل | توضیح |
             |------|-------|
-            | `VoiceToText-Setup-${{ github.ref_name }}.exe` | **نصب‌کننده ویندوز (توصیه‌شده)** — نصب کامل با آیکون و منوی Start |
-            | `VoiceToText.exe` | فایل قابل‌اجرای مستقل — بدون نیاز به نصب |
+            | `VoiceToText-Setup-${{ github.ref_name }}.exe` | **نصب‌کننده ویندوز (توصیه‌شده)** — نصب کامل با آیکون و منوی Start (بدون خطای آنتی‌ویروس) |
+            | `VoiceToText-Portable.zip` | فایل فشرده بدون نیاز به نصب — پس از استخراج `VoiceToText.exe` را اجرا کنید |
 
             ## سیستم‌مورد نیاز
             - ویندوز ۱۰ یا ۱۱ (۶۴ بیتی)
