@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, pyqtSignal as Signal, QTimer
-from PyQt6.QtGui import QFont, QColor
+from PyQt6.QtGui import QFont, QColor, QKeyEvent, QKeySequence
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QGroupBox, QScrollArea,
     QLabel, QLineEdit, QComboBox, QCheckBox,
@@ -21,6 +21,172 @@ RESERVED_HOTKEYS = {
     "win+r", "win+e", "win+i", "win+p", "win+a", "win+s", "win+x",
     "win+tab", "ctrl+shift+esc", "printscreen", "ctrl+esc"
 }
+
+# نگاشت کد کلید Qt به نام میانبر
+KEY_NAMES = {
+    Qt.Key.Key_Control: "ctrl",
+    Qt.Key.Key_Alt: "alt",
+    Qt.Key.Key_Shift: "shift",
+    Qt.Key.Key_Meta: "win",
+    Qt.Key.Key_Return: "enter",
+    Qt.Key.Key_Enter: "enter",
+    Qt.Key.Key_Escape: "esc",
+    Qt.Key.Key_Backspace: "backspace",
+    Qt.Key.Key_Delete: "delete",
+    Qt.Key.Key_Tab: "tab",
+    Qt.Key.Key_Space: "space",
+    Qt.Key.Key_Left: "left",
+    Qt.Key.Key_Right: "right",
+    Qt.Key.Key_Up: "up",
+    Qt.Key.Key_Down: "down",
+    Qt.Key.Key_Home: "home",
+    Qt.Key.Key_End: "end",
+    Qt.Key.Key_PageUp: "pageup",
+    Qt.Key.Key_PageDown: "pagedown",
+    Qt.Key.Key_Insert: "insert",
+    Qt.Key.Key_CapsLock: "capslock",
+    Qt.Key.Key_F1: "f1",  Qt.Key.Key_F2: "f2",  Qt.Key.Key_F3: "f3",
+    Qt.Key.Key_F4: "f4",  Qt.Key.Key_F5: "f5",  Qt.Key.Key_F6: "f6",
+    Qt.Key.Key_F7: "f7",  Qt.Key.Key_F8: "f8",  Qt.Key.Key_F9: "f9",
+    Qt.Key.Key_F10: "f10", Qt.Key.Key_F11: "f11", Qt.Key.Key_F12: "f12",
+}
+
+MODIFIER_KEYS = {
+    Qt.Key.Key_Control, Qt.Key.Key_Alt,
+    Qt.Key.Key_Shift, Qt.Key.Key_Meta
+}
+
+
+class HotkeyRecorderWidget(QWidget):
+    """
+    ویجت تعریف میانبر به سبک گفتار-محور — کاربر روی دکمه کلیک می‌کند
+    سپس کلیدهای دلخواه را فشار می‌دهد. میانبر بلافاصله ثبت می‌شود.
+    """
+    hotkey_changed = pyqtSignal(str)  # نوشته جدید به فرم pynput (ctrl+alt+v)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._recording = False
+        self._current_keys = set()
+        self._recorded_hotkey = ""
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+
+        self.display_label = QLabel()
+        self.display_label.setObjectName("HotkeyDisplay")
+        self.display_label.setMinimumWidth(180)
+        self.display_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.display_label.setFont(get_font(12, QFont.Weight.Bold))
+        layout.addWidget(self.display_label, 1)
+
+        self.record_btn = QPushButton("تغییر")
+        self.record_btn.setObjectName("RecordHotkeyBtn")
+        self.record_btn.setFixedSize(64, 32)
+        self.record_btn.setFont(get_font(11))
+        self.record_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.record_btn.clicked.connect(self._toggle_recording)
+        layout.addWidget(self.record_btn)
+
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self._update_display()
+
+    def get_hotkey(self) -> str:
+        return self._recorded_hotkey
+
+    def set_hotkey(self, hotkey: str):
+        self._recorded_hotkey = hotkey.strip().lower()
+        self._update_display()
+
+    def _toggle_recording(self):
+        if self._recording:
+            self._stop_recording()
+        else:
+            self._start_recording()
+
+    def _start_recording(self):
+        self._recording = True
+        self._current_keys = set()
+        self.display_label.setText("کلیدهای دلخواه را فشار دهید...")
+        self.record_btn.setText("لغو")
+        self.display_label.setStyleSheet("background: rgba(47,129,247,0.12); border: 1.5px solid rgba(47,129,247,0.5); border-radius: 8px; padding: 4px 10px;")
+        self.setFocus()
+
+    def _stop_recording(self):
+        self._recording = False
+        self._current_keys = set()
+        self.record_btn.setText("تغییر")
+        self.display_label.setStyleSheet("")
+        self._update_display()
+
+    def _update_display(self):
+        if self._recorded_hotkey:
+            self.display_label.setText(self._recorded_hotkey.upper())
+        else:
+            self.display_label.setText("میانبر تعریف نشده")
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if not self._recording:
+            super().keyPressEvent(event)
+            return
+
+        key = Qt.Key(event.key())
+        if key == Qt.Key.Key_Escape:
+            self._stop_recording()
+            return
+
+        self._current_keys.add(key)
+        self._show_live_keys()
+
+        # اگر یک کلید غیر-مودیفایر فشار داده شد، ترکیب کامل است
+        if key not in MODIFIER_KEYS:
+            hotkey = self._build_hotkey()
+            if hotkey:
+                self._recorded_hotkey = hotkey
+                QTimer.singleShot(250, self._finish_recording)
+
+    def keyReleaseEvent(self, event: QKeyEvent):
+        if not self._recording:
+            super().keyReleaseEvent(event)
+            return
+        key = Qt.Key(event.key())
+        self._current_keys.discard(key)
+
+    def _show_live_keys(self):
+        if self._current_keys:
+            self.display_label.setText(self._build_hotkey_from_keys(self._current_keys).upper() or "کلیدهای دلخواه را فشار دهید...")
+
+    def _finish_recording(self):
+        self._recording = False
+        self._current_keys = set()
+        self.record_btn.setText("تغییر")
+        self.display_label.setStyleSheet("")
+        self._update_display()
+        self.hotkey_changed.emit(self._recorded_hotkey)
+
+    def _build_hotkey(self) -> str:
+        return self._build_hotkey_from_keys(self._current_keys)
+
+    def _build_hotkey_from_keys(self, keys: set) -> str:
+        parts = []
+        # اضافه کردن modifier ها به ترتیب استاندارد
+        if Qt.Key.Key_Control in keys: parts.append("ctrl")
+        if Qt.Key.Key_Alt in keys: parts.append("alt")
+        if Qt.Key.Key_Shift in keys: parts.append("shift")
+        if Qt.Key.Key_Meta in keys: parts.append("win")
+        # اضافه کردن کلیدهای غیر-مودیفایر
+        for key in keys:
+            if key in MODIFIER_KEYS:
+                continue
+            name = KEY_NAMES.get(key)
+            if name:
+                parts.append(name)
+            else:
+                ch = chr(key).lower() if 32 <= key <= 126 else None
+                if ch:
+                    parts.append(ch)
+        return "+".join(parts) if len(parts) >= 1 else ""
 
 
 class UpdateCheckerThread(QThread):
@@ -270,6 +436,28 @@ QProgressBar::chunk {{
     background: {c["accent"]};
     border-radius: 6px;
 }}
+QLabel#HotkeyDisplay {{
+    background-color: {c["bg"]};
+    border: 1.5px solid {c["border"]};
+    border-radius: 8px;
+    color: {c["text_primary"]};
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}}
+QPushButton#RecordHotkeyBtn {{
+    background-color: transparent;
+    color: {c["accent"]};
+    border: 1.5px solid {c["accent"]};
+    border-radius: 7px;
+    padding: 0 10px;
+    font-weight: bold;
+}}
+QPushButton#RecordHotkeyBtn:hover {{
+    background-color: {c["accent"]};
+    color: #ffffff;
+}}
 """
 
     def _make_btn(self, text: str, primary: bool = False) -> QPushButton:
@@ -397,10 +585,19 @@ QProgressBar::chunk {{
 
         # ---- کارت ۳: میانبر ----
         c3 = SectionCard("⌨ کلید میانبر سراسری")
-        row_hk = QHBoxLayout(); row_hk.addWidget(self._make_label("کلید میانبر:"))
-        self.hotkey_edit = self._make_lineedit("مثال: ctrl+alt+v  یا  f8")
-        self.hotkey_edit.textChanged.connect(self._validate_hotkey)
-        row_hk.addWidget(self.hotkey_edit); c3.body_layout.addLayout(row_hk)
+
+        hk_hint = QLabel("برای تعریف میانبر، روی دکمه 'تغییر' کلیک کنید سپس کلیدهای دلخواه را فشار دهید.")
+        hk_hint.setObjectName("SettingsHint")
+        hk_hint.setFont(get_font(11))
+        hk_hint.setWordWrap(True)
+        c3.body_layout.addWidget(hk_hint)
+
+        row_hk = QHBoxLayout()
+        row_hk.addWidget(self._make_label("کلید میانبر:"))
+        self.hotkey_recorder = HotkeyRecorderWidget()
+        self.hotkey_recorder.hotkey_changed.connect(self._validate_hotkey_recorder)
+        row_hk.addWidget(self.hotkey_recorder, 1)
+        c3.body_layout.addLayout(row_hk)
 
         self.hotkey_warn = QLabel("")
         self.hotkey_warn.setObjectName("HotkeyWarn")
@@ -489,16 +686,14 @@ QProgressBar::chunk {{
         for dev in get_input_devices():
             self.mic_combo.addItem(dev["name"], dev["index"])
 
-    def _validate_hotkey(self, text: str):
-        """بررسی معتبر بودن کلید میانبر و هشدار در صورت رزرو شده بودن."""
-        normalized = text.strip().lower().replace(" ", "")
+    def _validate_hotkey_recorder(self, hotkey: str):
+        """بررسی معتبر بودن کلید میانبر ضبط‌شده."""
+        normalized = hotkey.strip().lower().replace(" ", "")
         if normalized in RESERVED_HOTKEYS:
             self.hotkey_warn.setText(
-                f"⚠ این کلید ({text.strip()}) توسط ویندوز رزرو شده است و نمی‌توان آن را override کرد.\n"
+                f"⚠ این کلید ({hotkey.strip()}) توسط ویندوز رزرو شده است."
                 "لطفاً ترکیب دیگری مانند Ctrl+Alt+V یا F8 انتخاب کنید."
             )
-        elif normalized and len(normalized) < 2:
-            self.hotkey_warn.setText("⚠ کلید میانبر باید حداقل شامل یک ترکیب باشد (مثلاً ctrl+alt+v)")
         else:
             self.hotkey_warn.setText("")
 
@@ -513,7 +708,7 @@ QProgressBar::chunk {{
         self.chunk_slider.setValue(max(10, min(40, int(float(config.get("stream_chunk_secs", 1.5)) * 10))))
         self.auto_stop_check.setChecked(bool(config.get("auto_stop_on_silence", True)))
         self.silence_slider.setValue(max(5, min(25, int(float(config.get("silence_timeout", 0.8)) * 10))))
-        self.hotkey_edit.setText(config.get("hotkey", "ctrl+alt+v"))
+        self.hotkey_recorder.set_hotkey(config.get("hotkey", "ctrl+alt+v"))
         idx = self.inject_combo.findData(config.get("injection_method", "clipboard"))
         if idx >= 0: self.inject_combo.setCurrentIndex(idx)
         self.theme_combo.blockSignals(True)
@@ -525,9 +720,9 @@ QProgressBar::chunk {{
         self.update_on_start_check.setChecked(bool(config.get("check_updates_on_start", True)))
 
     def _save_values(self):
-        hotkey = self.hotkey_edit.text().strip().lower()
+        hotkey = self.hotkey_recorder.get_hotkey().strip().lower()
         if not hotkey:
-            QMessageBox.warning(self, "خطا", "لطفاً یک کلید میانبر معتبر وارد کنید.")
+            QMessageBox.warning(self, "خطا", "لطفاً ابتدا کلید میانبر را تعریف کنید.")
             return
         if hotkey.replace(" ", "") in RESERVED_HOTKEYS:
             QMessageBox.warning(self, "کلید رزرو شده",

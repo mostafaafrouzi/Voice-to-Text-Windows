@@ -136,7 +136,11 @@ def clean_text(
         cleaned = capitalize_english(cleaned)
 
     if is_persian and persian_digits:
+        # تبدیل اعداد لاتین به فارسی
         cleaned = cleaned.translate(EN_TO_FA_DIGITS)
+    elif is_persian and not persian_digits:
+        # گوگل برای فارسی ارقام عربی-هندی برمی‌گرداند — آن‌ها را به لاتین تبدیل کن
+        cleaned = cleaned.translate(FA_TO_EN_DIGITS)
     elif not is_persian:
         cleaned = cleaned.translate(FA_TO_EN_DIGITS)
 

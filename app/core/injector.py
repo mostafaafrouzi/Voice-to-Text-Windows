@@ -14,8 +14,45 @@ KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_UNICODE = 0x0004
 INPUT_KEYBOARD = 1
 
+# HWND پنجره هدف که قبل از شروع ضبط ذخیره می‌شود
+_target_hwnd: int = 0
 
-# ساختارهای Ctypes برای SendInput در صورت نیاز
+
+def save_target_window():
+    """
+    ذخیره HWND پنجره فعال فعلی به عنوان هدف تزریق متن.
+    باید درست قبل از شروع ضبط صدا فراخوانی شود.
+    """
+    global _target_hwnd
+    hwnd = user32.GetForegroundWindow()
+    if hwnd:
+        _target_hwnd = hwnd
+    print(f"[Injector] Target window saved: {_target_hwnd}")
+
+
+def _restore_focus_to_target():
+    """
+    بازگرداندن فوکوس به پنجره هدف ذخیره‌شده.
+    قبل از تزریق متن فراخوانی می‌شود.
+    """
+    global _target_hwnd
+    if not _target_hwnd:
+        return False
+    try:
+        # بررسی معتبر بودن HWND
+        if not user32.IsWindow(_target_hwnd):
+            _target_hwnd = 0
+            return False
+        # تغییر فوکوس به پنجره هدف
+        user32.SetForegroundWindow(_target_hwnd)
+        time.sleep(0.06)  # انتظار برای پردازش پیام فوکوس
+        return True
+    except Exception as e:
+        print(f"[Injector] Focus restore failed: {e}")
+        return False
+
+
+# ساختارهای Ctypes برای SendInput
 class KEYBDINPUT(ctypes.Structure):
     _fields_ = [
         ("wVk", wintypes.WORD),
@@ -71,8 +108,8 @@ def _set_clipboard_text(text: str):
 
 def paste_via_clipboard(text: str):
     """
-    تزریق فوق‌سریع و ایمن متن از طریق کلیپ‌بورد و نگه‌داری محتوای قبلی کلیپ‌بورد کاربر.
-    این روش برای متون فارسی طولانی سریع‌ترین و بدون خطاترین روش در تمام نرم‌افزارهای ویندوز است.
+    تزریق فوق‌سریع و ایمن متن از طریق کلیپ‌بورد.
+    قبل از Ctrl+V فوکوس را به پنجره هدف بازمی‌گرداند.
     """
     if not text:
         return
@@ -80,28 +117,34 @@ def paste_via_clipboard(text: str):
     previous_text = _get_clipboard_text()
 
     if not _set_clipboard_text(text):
-        # اگر کلیپ‌بورد به هر دلیلی باز نشد، به روش یونیکد سوییچ کن
+        # اگر کلیپ‌بورد باز نشد، روش یونیکد را امتحان کن
         type_via_unicode(text)
         return
+
+    # بازگردانی فوکوس به پنجره هدف قبل از ارسال کلید
+    _restore_focus_to_target()
 
     # ارسال Ctrl + V
     user32.keybd_event(VK_CONTROL, 0, 0, 0)
     user32.keybd_event(VK_V, 0, 0, 0)
-    time.sleep(0.02)
+    time.sleep(0.025)
     user32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
     user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
 
-    # بازگردانی کلیپ‌بورد قبلی پس از چند میلی‌ثانیه برای جلوگیری از از دست رفتن کپی کاربر
+    # بازگردانی کلیپ‌بورد قبلی پس از چند میلی‌ثانیه
     if previous_text is not None:
         def restore():
-            time.sleep(0.08)
+            time.sleep(0.12)
             _set_clipboard_text(previous_text)
 
         threading.Thread(target=restore, daemon=True).start()
 
 
 def type_via_unicode(text: str):
-    """تایپ مستقیم کاراکترهای یونیکد بدون استفاده از کلیپ‌بورد."""
+    """تایپ مستقیم کاراکترهای یونیکد از طریق SendInput با بازگردانی فوکوس."""
+    # بازگردانی فوکوس قبل از تایپ
+    _restore_focus_to_target()
+
     for char in text:
         if char == "\n":
             # Enter key

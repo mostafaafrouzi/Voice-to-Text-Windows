@@ -21,6 +21,7 @@ from .wave_widget import WaveVisualizerWidget
 from .fonts import load_fonts, get_font, FONT_FAMILY
 from ..config import config
 from ..core.engine import SpeechEngine, SpeechState
+from ..core.injector import save_target_window
 
 user32 = ctypes.windll.user32
 GWL_EXSTYLE = -20
@@ -362,10 +363,16 @@ class FloatingPillWidget(QWidget):
     def _connect_engine(self):
         self.bridge.state_changed.connect(self._update_state_ui)
         self.bridge.level_changed.connect(self.wave_widget.set_audio_level)
-        self.bridge.hotkey_triggered.connect(self.engine.toggle)
+        self.bridge.hotkey_triggered.connect(self._on_hotkey_triggered)
 
         self.engine.on_state_change = lambda st, msg: self.bridge.state_changed.emit(st, msg)
         self.engine.on_level_change = lambda lvl: self.bridge.level_changed.emit(lvl)
+
+    def _on_hotkey_triggered(self):
+        """ذخیره پنجره هدف قبل از toggle — از طریق میانبر صفحه‌کلید."""
+        if self.engine.state in (SpeechState.IDLE, SpeechState.SUCCESS, SpeechState.ERROR):
+            save_target_window()
+        self.engine.toggle()
 
     def _update_state_ui(self, state: str, message: str):
         self.mic_btn.set_state(state)
@@ -396,6 +403,9 @@ class FloatingPillWidget(QWidget):
             self.status_label.setStyleSheet(f"color: {c['text_secondary']};")
 
     def _on_mic_clicked(self):
+        """ذخیره پنجره هدف قبل از شروع ضبط — از طریق کلیک روی دکمه میکروفون."""
+        if self.engine.state in (SpeechState.IDLE, SpeechState.SUCCESS, SpeechState.ERROR):
+            save_target_window()
         self.engine.toggle()
 
     def _on_toggle_language(self):
