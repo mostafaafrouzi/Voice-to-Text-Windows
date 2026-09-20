@@ -46,6 +46,8 @@ class MicButton(QWidget):
         super().__init__(parent)
         self.setFixedSize(40, 40)
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        # NoFocus: کلیک روی میکروفون نباید keyboard focus رو از پنجره هدف بگیرد
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._state = SpeechState.IDLE
         self._pulse = 0.0
         self._pulse_dir = 1
@@ -197,6 +199,8 @@ class FloatingPillWidget(QWidget):
         self.container = QWidget(self)
         self.container.setObjectName("PillContainer")
         self.container.setGeometry(6, 5, 348, 54)
+        # NoFocus روی کانتینر اصلی
+        self.container.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         # افکت سایه نرم ویندوز ۱۱
         self.shadow = QGraphicsDropShadowEffect(self)
@@ -244,6 +248,7 @@ class FloatingPillWidget(QWidget):
         self.lang_btn.setFixedSize(34, 26)
         self.lang_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.lang_btn.setFont(get_font(10, QFont.Weight.Bold))
+        self.lang_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # NoFocus
         self.lang_btn.clicked.connect(self._on_toggle_language)
         right_layout.addWidget(self.lang_btn)
 
@@ -254,6 +259,7 @@ class FloatingPillWidget(QWidget):
         self.settings_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.settings_btn.setFont(get_font(13))
         self.settings_btn.setToolTip("تنظیمات")
+        self.settings_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # NoFocus
         self.settings_btn.clicked.connect(self.open_settings_requested.emit)
         right_layout.addWidget(self.settings_btn)
 
@@ -264,6 +270,7 @@ class FloatingPillWidget(QWidget):
         self.hide_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.hide_btn.setFont(get_font(11))
         self.hide_btn.setToolTip("مخفی کردن ویجت (برنامه در کنار ساعت فعال است)")
+        self.hide_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # NoFocus
         self.hide_btn.clicked.connect(self.hide)
         right_layout.addWidget(self.hide_btn)
 

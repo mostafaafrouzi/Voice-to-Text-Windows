@@ -1,5 +1,5 @@
 # نسخه برنامه — این فایل توسط workflow گیتهاب به‌روزرسانی می‌شود
-__version__ = "2.2.0"
+__version__ = "2.2.1"
 __app_name__ = "Voice-to-Text Windows"
 __author__ = "Mostafa Afrouzi"
 __github_owner__ = "mostafaafrouzi"

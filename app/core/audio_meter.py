@@ -211,8 +211,13 @@ class StreamingAudioRecorder:
                             except Exception as e:
                                 print(f"[StreamingRecorder] on_chunk_ready error: {e}")
 
-                    # بررسی سکوت طولانی نهایی برای توقف خودکار
-                    if auto_stop and silence_duration >= silence_timeout:
+                # بررسی سکوت طولانی نهایی برای توقف خودکار
+                # این بررسی باید خارج از if speech_active باشد:
+                # بعد از ارسال هر chunk، speech_active=False می‌شود ولی
+                # auto_stop هنوز باید بر اساس آخرین صدا بررسی شود
+                if auto_stop and not speech_active:
+                    total_silence = now - last_voice_time
+                    if total_silence >= silence_timeout:
                         if self.on_silence_detected:
                             try:
                                 self.on_silence_detected()
