@@ -124,6 +124,7 @@ class StreamingAudioRecorder:
         alpha = 0.95      # ضریب فیلتر پایین‌گذر برای سطح نویز زمینه
 
         speech_active = False
+        has_spoken = False
         speech_start_time = 0.0
         last_voice_time = time.time()
         pause_threshold = 0.42  # مکث طبیعی بین عبارات (۴۲۰ میلی‌ثانیه)
@@ -167,6 +168,7 @@ class StreamingAudioRecorder:
                         pass
 
                 if is_voice:
+                    has_spoken = True
                     if not speech_active:
                         speech_active = True
                         speech_start_time = now
@@ -217,7 +219,16 @@ class StreamingAudioRecorder:
                 # auto_stop هنوز باید بر اساس آخرین صدا بررسی شود
                 if auto_stop and not speech_active:
                     total_silence = now - last_voice_time
-                    if total_silence >= silence_timeout:
+                    if not has_spoken and total_silence >= 10.0:
+                        # اگر کاربر اصلاً صحبت نکرد بعد از ۱۰ ثانیه خاموش شود
+                        if self.on_silence_detected:
+                            try:
+                                self.on_silence_detected()
+                            except Exception:
+                                pass
+                        break
+                    elif has_spoken and total_silence >= silence_timeout:
+                        # اگر کاربر صحبت کرده بود و حالا سکوت کرده است
                         if self.on_silence_detected:
                             try:
                                 self.on_silence_detected()
