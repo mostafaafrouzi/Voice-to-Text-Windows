@@ -2,7 +2,7 @@
 ; Generated automatically by build_installer.py
 
 #define AppName "Voice-to-Text Windows"
-#define AppVersion "2.1.0"
+#define AppVersion "2.2.4"
 #define AppPublisher "Mostafa Afrouzi"
 #define AppURL "https://github.com/mostafaafrouzi/Voice-to-Text-Windows"
 #define AppExeName "VoiceToText.exe"

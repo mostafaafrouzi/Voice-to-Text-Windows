@@ -1,5 +1,18 @@
 import sys
 import ctypes
+
+# تضمین انکودینگ UTF-8 برای ترمینال و دیباگر ویندوز
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
@@ -118,7 +131,7 @@ def main():
     hotkey_mgr.start()
 
     # اتصال سیگنال‌ها
-    tray.toggle_listening_requested.connect(engine.toggle)
+    tray.toggle_listening_requested.connect(pill._on_hotkey_triggered)
     tray.toggle_language_requested.connect(lambda: pill._on_toggle_language())
     tray.open_settings_requested.connect(open_settings)
     pill.open_settings_requested.connect(open_settings)

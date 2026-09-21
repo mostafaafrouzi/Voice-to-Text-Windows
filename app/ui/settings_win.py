@@ -607,8 +607,9 @@ QPushButton#RecordHotkeyBtn:hover {{
 
         row_inj = QHBoxLayout(); row_inj.addWidget(self._make_label("روش درج متن:"))
         self.inject_combo = self._make_combo()
-        self.inject_combo.addItem("📋 کلیپ‌بورد (پیشنهادی)", "clipboard")
-        self.inject_combo.addItem("⌨ یونیکد مستقیم (SendInput)", "unicode")
+        self.inject_combo.addItem("🚀 تایپ مستقیم در برنامه فعال (پیشنهادی - هوشمند و روان)", "direct")
+        self.inject_combo.addItem("📋 فقط ذخیره در کلیپ‌بورد (بدون تایپ در پنجره)", "clipboard")
+        self.inject_combo.addItem("⌨ شبیه‌سازی کیبورد (SendInput کاراکتر به کاراکتر)", "unicode")
         row_inj.addWidget(self.inject_combo); c3.body_layout.addLayout(row_inj)
         bl.addWidget(c3)
 
@@ -709,7 +710,7 @@ QPushButton#RecordHotkeyBtn:hover {{
         self.auto_stop_check.setChecked(bool(config.get("auto_stop_on_silence", True)))
         self.silence_slider.setValue(max(5, min(25, int(float(config.get("silence_timeout", 0.8)) * 10))))
         self.hotkey_recorder.set_hotkey(config.get("hotkey", "ctrl+alt+v"))
-        idx = self.inject_combo.findData(config.get("injection_method", "clipboard"))
+        idx = self.inject_combo.findData(config.get("injection_method", "direct"))
         if idx >= 0: self.inject_combo.setCurrentIndex(idx)
         self.theme_combo.blockSignals(True)
         idx = self.theme_combo.findData(config.get("theme", "system"))

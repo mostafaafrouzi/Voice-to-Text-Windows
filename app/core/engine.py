@@ -4,7 +4,7 @@ import threading
 import time
 import speech_recognition as sr
 from .audio_meter import StreamingAudioRecorder
-from .injector import inject_text
+from .injector import inject_text, start_new_session
 from .sounds import play_cancel_sound, play_start_sound, play_stop_sound
 from .text_cleaner import clean_text
 from ..config import config
@@ -73,9 +73,12 @@ class StreamingSpeechEngine:
 
     def _handle_chunk_ready(self, wav_bytes: bytes):
         """دریافت یک قطعه صوتی و قرار دادن آن در صف پردازش ترتیبی."""
+        print(f"[Engine] _handle_chunk_ready: received {len(wav_bytes)} bytes")
         if not wav_bytes or len(wav_bytes) < 3000:
+            print(f"[Engine] _handle_chunk_ready: SKIPPED (too small: {len(wav_bytes)} bytes)")
             return
         self._queue.put(wav_bytes)
+        print(f"[Engine] _handle_chunk_ready: queued for transcription (queue size: {self._queue.qsize()})")
 
     def _handle_silence_detected(self):
         """سکوت پایانی کاربر تشخیص داده شد."""
@@ -114,9 +117,12 @@ class StreamingSpeechEngine:
                     audio_data = self._recognizer.record(source)
 
             # فراخوانی Google Cloud Speech Recognition
+            print(f"[Engine] Sending {len(wav_bytes)} bytes to Google Speech API (lang={language})...")
             raw_text = self._recognizer.recognize_google(audio_data, language=language)
+            print(f"[Engine] Google returned: '{raw_text}'")
 
             if not raw_text or not raw_text.strip():
+                print(f"[Engine] Empty result from Google, skipping.")
                 return
 
             cleaned_text = clean_text(
@@ -128,10 +134,13 @@ class StreamingSpeechEngine:
             )
 
             if not cleaned_text:
+                print(f"[Engine] clean_text returned empty, skipping.")
                 return
 
             # تزریق آنی متن در فیلد متنی فعال
-            inject_text(cleaned_text + " ")
+            to_inject = cleaned_text if cleaned_text.endswith("\n") else (cleaned_text + " ")
+            print(f"[Engine] Injecting text: '{cleaned_text[:30]}...'")
+            inject_text(to_inject)
 
             if self.on_result:
                 try:
@@ -158,6 +167,7 @@ class StreamingSpeechEngine:
         with self._lock:
             if self._state == SpeechState.LISTENING or self._recorder.is_recording:
                 return
+            start_new_session()
             mic_index = config.get("microphone_index")
             play_start_sound()
             self._set_state(SpeechState.LISTENING, "در حال گوش دادن...")

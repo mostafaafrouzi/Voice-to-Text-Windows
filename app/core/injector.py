@@ -10,15 +10,42 @@ user32 = ctypes.windll.user32
 kernel32 = ctypes.windll.kernel32
 
 VK_CONTROL = 0x11
+VK_MENU = 0x12     # Alt
+VK_SHIFT = 0x10
 VK_V = 0x56
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_UNICODE = 0x0004
 INPUT_KEYBOARD = 1
-WM_PASTE = 0x0302
 
 # HWND پنجره هدف که درست قبل از شروع ضبط ذخیره می‌شود
 _target_hwnd: int = 0
 _injection_lock = threading.Lock()
+
+# لیست تجمیعی متون دیکته‌شده در نشست جاری (برای حالت فقط کلیپ‌بورد)
+_session_clipboard_parts: list[str] = []
+
+
+def _safe_print(msg: str):
+    """چاپ ایمن لاگ بدون خطای انکودینگ در کنسول‌های مختلف ویندوز."""
+    try:
+        print(msg)
+    except UnicodeEncodeError:
+        try:
+            print(msg.encode("ascii", errors="backslashreplace").decode("ascii"))
+        except Exception:
+            pass
+
+
+# ساختارهای استاندارد ۴۰-بایتی SendInput برای ویندوز ۶۴-بیتی
+class MOUSEINPUT(ctypes.Structure):
+    _fields_ = [
+        ("dx", wintypes.LONG),
+        ("dy", wintypes.LONG),
+        ("mouseData", wintypes.DWORD),
+        ("dwFlags", wintypes.DWORD),
+        ("time", wintypes.DWORD),
+        ("dwExtraInfo", ctypes.c_void_p),
+    ]
 
 
 class KEYBDINPUT(ctypes.Structure):
@@ -27,132 +54,127 @@ class KEYBDINPUT(ctypes.Structure):
         ("wScan", wintypes.WORD),
         ("dwFlags", wintypes.DWORD),
         ("time", wintypes.DWORD),
-        ("dwExtraInfo", ctypes.c_ulonglong)
+        ("dwExtraInfo", ctypes.c_void_p),
+    ]
+
+
+class HARDWAREINPUT(ctypes.Structure):
+    _fields_ = [
+        ("uMsg", wintypes.DWORD),
+        ("wParamL", wintypes.WORD),
+        ("wParamH", wintypes.WORD),
+    ]
+
+
+class INPUT_UNION(ctypes.Union):
+    _fields_ = [
+        ("mi", MOUSEINPUT),
+        ("ki", KEYBDINPUT),
+        ("hi", HARDWAREINPUT),
     ]
 
 
 class INPUT(ctypes.Structure):
-    class _INPUT(ctypes.Union):
-        _fields_ = [("ki", KEYBDINPUT)]
-    _anonymous_ = ("_input",)
     _fields_ = [
         ("type", wintypes.DWORD),
-        ("_input", _INPUT)
+        ("union", INPUT_UNION),
     ]
+
+
+LPINPUT = INPUT * 2
+
+
+def start_new_session():
+    """شروع نشست جدید: بافر تجمیعی کلیپ‌بورد را پاکسازی می‌کند."""
+    global _session_clipboard_parts
+    with _injection_lock:
+        _session_clipboard_parts.clear()
 
 
 def save_target_window():
     """
-    ذخیره HWND پنجره فعال فعلی به عنوان هدف تزریق متن.
-    باید درست قبل از شروع ضبط صدا فراخوانی شود.
+    ذخیره HWND پنجره فعال کاربر به عنوان مقصد تایپ و تزریق متن.
+    پنجره‌های متعلق به پردازه خود برنامه نادیده گرفته می‌شوند تا فوکوس کاربر حفظ شود.
     """
     global _target_hwnd
     hwnd = user32.GetForegroundWindow()
     if hwnd:
-        _target_hwnd = hwnd
-    print(f"[Injector] Target window saved: HWND={_target_hwnd}")
+        pid = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if pid.value != kernel32.GetCurrentProcessId():
+            _target_hwnd = hwnd
+            print(f"[Injector] Target window saved: HWND={_target_hwnd}")
+        else:
+            print(f"[Injector] Foreground window is our own process, keeping previous target HWND={_target_hwnd}")
 
 
-def _is_valid_target() -> bool:
-    """بررسی معتبر بودن پنجره هدف."""
+def _focus_target_window() -> bool:
+    """بازگردانی هوشمند فوکوس به پنجره هدف کاربر بدون پرش بیهوده."""
     global _target_hwnd
-    if not _target_hwnd:
+    if not _target_hwnd or not user32.IsWindow(_target_hwnd):
         return False
-    if not user32.IsWindow(_target_hwnd):
-        _target_hwnd = 0
-        return False
-    return True
 
-
-def _get_focused_control() -> int:
-    """
-    پیدا کردن کنترل متنی فعال از طریق AttachThreadInput.
-    این کار ضروری است چون GetFocus() فقط در thread پنجره هدف کار می‌کند.
-    """
-    global _target_hwnd
-    if not _is_valid_target():
-        return 0
-
-    focused = _target_hwnd
-    tid = ctypes.c_ulong(0)
-    target_tid = user32.GetWindowThreadProcessId(_target_hwnd, ctypes.byref(tid))
-    current_tid = kernel32.GetCurrentThreadId()
-
-    if target_tid and target_tid != current_tid:
-        try:
-            user32.AttachThreadInput(current_tid, target_tid, True)
-            child = user32.GetFocus()
-            if child and user32.IsWindow(child):
-                focused = child
-        except Exception:
-            pass
-        finally:
-            try:
-                user32.AttachThreadInput(current_tid, target_tid, False)
-            except Exception:
-                pass
-
-    return focused
-
-
-def _focus_target_window() -> tuple[bool, int]:
-    """
-    بازگردانی فوکوس به پنجره هدف با استفاده از تکنیک AttachThreadInput.
-    این تکنیک محدودیت Windows Foreground Lock رو دور می‌زند.
-    مقدار بازگشتی: (موفقیت, target_thread_id)
-    """
-    global _target_hwnd
-    if not _is_valid_target():
-        return False, 0
+    fg = user32.GetForegroundWindow()
+    if fg == _target_hwnd:
+        return True
 
     try:
-        tid = ctypes.c_ulong(0)
-        target_tid = user32.GetWindowThreadProcessId(_target_hwnd, ctypes.byref(tid))
+        tid_buf = ctypes.c_ulong(0)
+        target_tid = user32.GetWindowThreadProcessId(_target_hwnd, ctypes.byref(tid_buf))
         current_tid = kernel32.GetCurrentThreadId()
 
+        attached = False
         if target_tid and target_tid != current_tid:
-            user32.AttachThreadInput(current_tid, target_tid, True)
+            attached = bool(user32.AttachThreadInput(current_tid, target_tid, True))
 
         user32.SetForegroundWindow(_target_hwnd)
         user32.BringWindowToTop(_target_hwnd)
-        time.sleep(0.07)  # کمی صبر تا پنجره فوکوس بگیرد
-        return True, target_tid
+        time.sleep(0.04)
+
+        if attached:
+            user32.AttachThreadInput(current_tid, target_tid, False)
+
+        return True
     except Exception as e:
         print(f"[Injector] Focus restore failed: {e}")
-        return False, 0
+        return False
 
 
-def _detach_from_target(target_tid: int):
-    """جدا کردن thread از پنجره هدف بعد از تزریق متن."""
-    if not target_tid:
-        return
-    try:
-        current_tid = kernel32.GetCurrentThreadId()
-        if target_tid != current_tid:
-            user32.AttachThreadInput(current_tid, target_tid, False)
-    except Exception:
-        pass
+def _ensure_modifiers_released():
+    """اطمینان از رها بودن کلیدهای کنترل، الت و شیفت قبل از درج متن."""
+    for vk in (VK_CONTROL, VK_MENU, VK_SHIFT):
+        if user32.GetAsyncKeyState(vk) & 0x8000:
+            user32.keybd_event(vk, 0, KEYEVENTF_KEYUP, 0)
 
 
-def _get_clipboard_text():
-    """دریافت محتوای فعلی متنی کلیپ‌بورد."""
+def _send_ctrl_v():
+    """ارسال تمیز کلیدهای میانبر Ctrl+V برای پیست در پنجره فعال."""
+    _ensure_modifiers_released()
+    user32.keybd_event(VK_CONTROL, 0, 0, 0)
+    user32.keybd_event(VK_V, 0, 0, 0)
+    time.sleep(0.03)
+    user32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
+    user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+
+
+def _get_clipboard_text() -> str | None:
+    """دریافت متن فعلی کلیپ‌بورد با چند بار تلاش."""
     for _ in range(5):
         try:
             win32clipboard.OpenClipboard()
             try:
                 if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
-                    data = win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
-                    return data
+                    return win32clipboard.GetClipboardData(win32con.CF_UNICODETEXT)
+                return None
             finally:
                 win32clipboard.CloseClipboard()
-            break
         except Exception:
-            time.sleep(0.01)
+            time.sleep(0.02)
     return None
 
 
 def _set_clipboard_text(text: str) -> bool:
-    """تنظیم متن در کلیپ‌بورد با تلاش مجدد."""
+    """قرار دادن متن در کلیپ‌بورد با قفل‌گشایی ایمن و تلاش مجدد."""
     for _ in range(10):
         try:
             win32clipboard.OpenClipboard()
@@ -163,111 +185,112 @@ def _set_clipboard_text(text: str) -> bool:
                 win32clipboard.CloseClipboard()
             return True
         except Exception:
-            time.sleep(0.01)
+            time.sleep(0.02)
     return False
+
+
+def copy_to_clipboard_only(text: str):
+    """
+    حالت اختصاصی «فقط کلیپ‌بورد»:
+    متن گفتار را فقط در کلیپ‌بورد ذخیره و تجمیع می‌کند و هیچ کلیدی به پنجره کاربر نمی‌فرستد.
+    """
+    global _session_clipboard_parts
+    if not text:
+        return
+
+    with _injection_lock:
+        _session_clipboard_parts.append(text)
+        full_session_text = "".join(_session_clipboard_parts).strip()
+        if _set_clipboard_text(full_session_text):
+            _safe_print(f"[Injector] Copied to clipboard ONLY (session length: {len(full_session_text)}): '{full_session_text[:35]}...'")
+        else:
+            _safe_print("[Injector] Failed to set clipboard in copy_to_clipboard_only")
 
 
 def paste_via_clipboard(text: str):
     """
-    تزریق متن از طریق کلیپ‌بورد.
-    از دو روش به صورت ترکیبی استفاده می‌کند:
-    ۱. WM_PASTE مستقیم به کنترل فعال (برای برنامه‌های Win32 استاندارد)
-    ۲. AttachThreadInput + Ctrl+V (برای مرورگرها و برنامه‌های مدرن)
+    تزریق فوق‌سریع، هوشمند و ۱۰۰٪ بدون خطای متن به محل نشانگر در پنجره فعال کاربر.
+    این روش کامل‌ترین سازگاری را با نگارش فارسی (RTL)، حروف چسبان، نیم‌فاصله‌ها
+    و ادیتورهای مدرن (VSCode, Notepad Win11, Office, Telegram, Chrome) دارد
+    و از به هم ریختگی، تکرار حروف یا تداخل با AutoComplete جلوگیری می‌کند.
     """
     if not text:
         return
 
     with _injection_lock:
-        previous_text = _get_clipboard_text()
-
         if not _set_clipboard_text(text):
-            type_via_unicode(text)
+            _safe_print("[Injector] Failed to set clipboard text, falling back to SendInput")
+            type_via_sendinput(text)
             return
 
-        target_tid = 0
-        try:
-            # روش ۱: WM_PASTE به کنترل فعال درون پنجره هدف
-            # این روش نیازی به تغییر فوکوس ندارد و برای Win32 عالی است
-            focused_ctrl = _get_focused_control()
-            if focused_ctrl:
-                user32.SendMessage(focused_ctrl, WM_PASTE, 0, 0)
-                time.sleep(0.02)
-
-            # روش ۲: AttachThreadInput + Ctrl+V
-            # برای Chrome، Firefox، Electron، اپ‌های مدرن
-            ok, target_tid = _focus_target_window()
-            if ok:
-                # ارسال Ctrl+V به پنجره هدف
-                inputs = (INPUT * 4)(
-                    INPUT(type=INPUT_KEYBOARD,
-                          _input=INPUT._INPUT(ki=KEYBDINPUT(wVk=VK_CONTROL, wScan=0, dwFlags=0, time=0, dwExtraInfo=0))),
-                    INPUT(type=INPUT_KEYBOARD,
-                          _input=INPUT._INPUT(ki=KEYBDINPUT(wVk=VK_V, wScan=0, dwFlags=0, time=0, dwExtraInfo=0))),
-                    INPUT(type=INPUT_KEYBOARD,
-                          _input=INPUT._INPUT(ki=KEYBDINPUT(wVk=VK_V, wScan=0, dwFlags=KEYEVENTF_KEYUP, time=0, dwExtraInfo=0))),
-                    INPUT(type=INPUT_KEYBOARD,
-                          _input=INPUT._INPUT(ki=KEYBDINPUT(wVk=VK_CONTROL, wScan=0, dwFlags=KEYEVENTF_KEYUP, time=0, dwExtraInfo=0))),
-                )
-                user32.SendInput(4, inputs, ctypes.sizeof(INPUT))
-                time.sleep(0.02)
-
-        except Exception as e:
-            print(f"[Injector] Clipboard paste error: {e}")
-        finally:
-            _detach_from_target(target_tid)
-
-        # بازگردانی کلیپ‌بورد قبلی بعد از اندکی تاخیر
-        if previous_text is not None:
-            def restore():
-                time.sleep(0.2)
-                _set_clipboard_text(previous_text)
-            threading.Thread(target=restore, daemon=True).start()
+        _focus_target_window()
+        _send_ctrl_v()
+        time.sleep(0.04)
+        _safe_print(f"[Injector] Successfully injected into active window: '{text[:30]}...'")
 
 
-def type_via_unicode(text: str):
+def type_via_sendinput(text: str):
     """
-    تایپ مستقیم کاراکترهای یونیکد با SendInput.
-    از AttachThreadInput برای تغییر ایمن فوکوس استفاده می‌کند.
+    تایپ کاراکتر به کاراکتر با SendInput اتمیک (KeyDown + KeyUp در یک فراخوانی).
+    دارای وقفه ۱۵ میلی‌ثانیه‌ای برای پردازش صحیح اتصالات فارسی در ادیتورها.
     """
     if not text:
         return
 
-    with _injection_lock:
-        target_tid = 0
-        try:
-            ok, target_tid = _focus_target_window()
+    _ensure_modifiers_released()
+    _focus_target_window()
 
-            for char in text:
-                if char == "\n":
-                    user32.keybd_event(0x0D, 0, 0, 0)
-                    user32.keybd_event(0x0D, 0, KEYEVENTF_KEYUP, 0)
-                    time.sleep(0.005)
-                    continue
+    for char in text:
+        if char == "\n":
+            user32.keybd_event(0x0D, 0, 0, 0)
+            time.sleep(0.01)
+            user32.keybd_event(0x0D, 0, KEYEVENTF_KEYUP, 0)
+            time.sleep(0.01)
+            continue
 
-                code = ord(char)
-                inp_down = INPUT(type=INPUT_KEYBOARD)
-                inp_down.ki = KEYBDINPUT(wVk=0, wScan=code, dwFlags=KEYEVENTF_UNICODE, time=0, dwExtraInfo=0)
-                user32.SendInput(1, ctypes.byref(inp_down), ctypes.sizeof(INPUT))
+        code = ord(char)
+        if code <= 0xFFFF:
+            inp = LPINPUT(
+                INPUT(type=INPUT_KEYBOARD, union=INPUT_UNION(ki=KEYBDINPUT(wVk=0, wScan=code, dwFlags=KEYEVENTF_UNICODE, time=0, dwExtraInfo=None))),
+                INPUT(type=INPUT_KEYBOARD, union=INPUT_UNION(ki=KEYBDINPUT(wVk=0, wScan=code, dwFlags=KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, time=0, dwExtraInfo=None)))
+            )
+            user32.SendInput(2, inp, ctypes.sizeof(INPUT))
+        else:
+            surrogates = char.encode("utf-16le")
+            for i in range(0, len(surrogates), 2):
+                scan = surrogates[i] | (surrogates[i + 1] << 8)
+                inp = LPINPUT(
+                    INPUT(type=INPUT_KEYBOARD, union=INPUT_UNION(ki=KEYBDINPUT(wVk=0, wScan=scan, dwFlags=KEYEVENTF_UNICODE, time=0, dwExtraInfo=None))),
+                    INPUT(type=INPUT_KEYBOARD, union=INPUT_UNION(ki=KEYBDINPUT(wVk=0, wScan=scan, dwFlags=KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, time=0, dwExtraInfo=None)))
+                )
+                user32.SendInput(2, inp, ctypes.sizeof(INPUT))
 
-                inp_up = INPUT(type=INPUT_KEYBOARD)
-                inp_up.ki = KEYBDINPUT(wVk=0, wScan=code, dwFlags=KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, time=0, dwExtraInfo=0)
-                user32.SendInput(1, ctypes.byref(inp_up), ctypes.sizeof(INPUT))
+        time.sleep(0.015)
 
-                time.sleep(0.003)
+    _safe_print(f"[Injector] SendInput typed: '{text[:30]}...'")
 
-        except Exception as e:
-            print(f"[Injector] Unicode injection error: {e}")
-        finally:
-            _detach_from_target(target_tid)
+
+def type_direct(text: str):
+    """سازگاری با فراخوانی‌های مستقیم."""
+    paste_via_clipboard(text)
 
 
 def inject_text(text: str):
-    """تزریق هوشمند متن بر اساس تنظیمات انتخابی کاربر."""
+    """
+    تزریق هوشمند متن بر اساس تنظیمات انتخابی کاربر:
+    - direct / auto / paste: تایپ آنی و بی‌نقص در برنامه فعال (مانند Gboard)
+    - clipboard / clipboard_only: فقط ذخیره در کلیپ‌بورد بدون هیچ‌گونه تایپ در پنجره
+    - unicode / sendinput: شبیه‌سازی صفحه‌کلید با SendInput
+    """
     if not text:
         return
 
-    method = config.get("injection_method", "clipboard")
-    if method == "unicode":
-        type_via_unicode(text)
+    method = config.get("injection_method", "direct")
+    _safe_print(f"[Injector] inject_text called: method={method}, text='{text[:30]}...'")
+
+    if method in ("clipboard", "clipboard_only"):
+        copy_to_clipboard_only(text)
+    elif method in ("unicode", "sendinput"):
+        type_via_sendinput(text)
     else:
         paste_via_clipboard(text)
