@@ -91,44 +91,72 @@ def start_new_session():
         _session_clipboard_parts.clear()
 
 
-def save_target_window():
+def _is_desktop_or_taskbar(hwnd: int) -> bool:
+    """بررسی اینکه آیا پنجره متعلق به دسکتاپ یا تسک‌بار ویندوز است یا خیر."""
+    if not hwnd or not user32.IsWindow(hwnd):
+        return True
+    class_buf = ctypes.create_unicode_buffer(256)
+    user32.GetClassNameW(hwnd, class_buf, 256)
+    cls = class_buf.value
+    return cls in ("Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd")
+
+
+def update_target_window() -> int:
     """
-    ذخیره HWND پنجره فعال کاربر به عنوان مقصد تایپ و تزریق متن.
-    پنجره‌های متعلق به پردازه خود برنامه نادیده گرفته می‌شوند تا فوکوس کاربر حفظ شود.
+    تشخیص و به‌روزرسانی پویای پنجره فعال هدف:
+    - اگر کاربر روی پنجره هر برنامه‌ای (تلگرام، نوت‌پد، ورد، مرورگر و...) کلیک کرده باشد،
+      آن پنجره را به عنوان مقصد تایپ و تزریق متن ثبت می‌کند.
+    - پنجره‌های متعلق به خود برنامه (ویجت شناور، دیالوگ تنظیمات و...) نادیده گرفته می‌شوند تا فوکوس کاربر حفظ شود.
+    - پنجره‌های پس‌زمینه ویندوز (دسکتاپ، تسک‌بار) نادیده گرفته می‌شوند.
     """
     global _target_hwnd
-    hwnd = user32.GetForegroundWindow()
-    if hwnd:
+    fg = user32.GetForegroundWindow()
+    if fg and user32.IsWindow(fg):
         pid = wintypes.DWORD()
-        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-        if pid.value != kernel32.GetCurrentProcessId():
-            _target_hwnd = hwnd
-            print(f"[Injector] Target window saved: HWND={_target_hwnd}")
-        else:
-            print(f"[Injector] Foreground window is our own process, keeping previous target HWND={_target_hwnd}")
+        user32.GetWindowThreadProcessId(fg, ctypes.byref(pid))
+        our_pid = kernel32.GetCurrentProcessId()
+
+        if pid.value != our_pid and not _is_desktop_or_taskbar(fg):
+            if _target_hwnd != fg:
+                _target_hwnd = fg
+                _safe_print(f"[Injector] Target window dynamically updated: HWND={_target_hwnd}")
+            return _target_hwnd
+
+    return _target_hwnd
+
+
+def save_target_window():
+    """ذخیره HWND پنجره فعال کاربر (همگام با تشخیص پویا)."""
+    update_target_window()
 
 
 def _focus_target_window() -> bool:
-    """بازگردانی هوشمند فوکوس به پنجره هدف کاربر بدون پرش بیهوده."""
-    global _target_hwnd
-    if not _target_hwnd or not user32.IsWindow(_target_hwnd):
+    """
+    اطمینان از فعال بودن پنجره هدف قبل از تایپ یا پیست:
+    - اگر پنجره فعال فعلی متعلق به برنامه دیگری است، همان به عنوان مقصد استفاده می‌شود و هیچ پرش یا تغییر فوکوسی رخ نمی‌دهد.
+    - تنها در صورتی که فوکوس روی ویجت شناور یا دیالوگ تنظیمات خود برنامه باشد، فوکوس به پنجره کاربر بازگردانده می‌شود.
+    """
+    target = update_target_window()
+    if not target or not user32.IsWindow(target):
         return False
 
     fg = user32.GetForegroundWindow()
-    if fg == _target_hwnd:
+    if fg == target:
+        # پنجره هدف همین حالا فعال است؛ بدون هیچ تاخیر یا پرش فوکوس ادامه بده
         return True
 
+    # فوکوس روی پنجره خودمان است؛ فوکوس را به آخرین پنجره خارجی معتبر برگردان
     try:
         tid_buf = ctypes.c_ulong(0)
-        target_tid = user32.GetWindowThreadProcessId(_target_hwnd, ctypes.byref(tid_buf))
+        target_tid = user32.GetWindowThreadProcessId(target, ctypes.byref(tid_buf))
         current_tid = kernel32.GetCurrentThreadId()
 
         attached = False
         if target_tid and target_tid != current_tid:
             attached = bool(user32.AttachThreadInput(current_tid, target_tid, True))
 
-        user32.SetForegroundWindow(_target_hwnd)
-        user32.BringWindowToTop(_target_hwnd)
+        user32.SetForegroundWindow(target)
+        user32.BringWindowToTop(target)
         time.sleep(0.04)
 
         if attached:
@@ -136,7 +164,7 @@ def _focus_target_window() -> bool:
 
         return True
     except Exception as e:
-        print(f"[Injector] Focus restore failed: {e}")
+        _safe_print(f"[Injector] Focus restore failed: {e}")
         return False
 
 
@@ -218,12 +246,13 @@ def paste_via_clipboard(text: str):
         return
 
     with _injection_lock:
+        _focus_target_window()
+
         if not _set_clipboard_text(text):
             _safe_print("[Injector] Failed to set clipboard text, falling back to SendInput")
             type_via_sendinput(text)
             return
 
-        _focus_target_window()
         _send_ctrl_v()
         time.sleep(0.04)
         _safe_print(f"[Injector] Successfully injected into active window: '{text[:30]}...'")

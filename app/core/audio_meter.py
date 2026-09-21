@@ -6,6 +6,7 @@ import wave
 import numpy as np
 import pyaudio
 from ..config import config
+from .injector import update_target_window
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
@@ -182,6 +183,10 @@ class StreamingAudioRecorder:
                         speech_active = True
                         speech_start_time = now
                         print(f"[VAD] >>> Speech STARTED at frame {_debug_frame_count}, rms={rms:.0f}")
+                        try:
+                            update_target_window()
+                        except Exception:
+                            pass
                         # افزودن بافر پیش از شروع صحبت
                         chunk_frames.extend(pre_buffer)
                         pre_buffer.clear()
@@ -217,6 +222,11 @@ class StreamingAudioRecorder:
                         frames_to_send = list(chunk_frames)
                         chunk_frames.clear()
                         speech_active = False
+
+                        try:
+                            update_target_window()
+                        except Exception:
+                            pass
 
                         wav_bytes = self._build_wav(frames_to_send)
                         print(f"[VAD] >>> Phrase chunk ready ({phrase_duration:.1f}s, pause={silence_duration:.2f}s): {len(wav_bytes)} bytes")

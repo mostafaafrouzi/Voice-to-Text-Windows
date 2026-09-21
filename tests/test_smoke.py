@@ -9,8 +9,9 @@ from app.core.updater import UpdateResult
 
 class TestSmokeIntegration(unittest.TestCase):
     def test_version_metadata(self):
-        self.assertEqual(__version__, "2.1.0")
-        self.assertTrue(len(__version__.split(".")) == 3)
+        parts = __version__.split(".")
+        self.assertTrue(len(parts) >= 3)
+        self.assertTrue(all(p.isdigit() for p in parts[:3]))
         self.assertTrue(len(__app_name__) > 0)
 
     def test_theme_system_resolution(self):

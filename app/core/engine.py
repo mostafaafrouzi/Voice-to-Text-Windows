@@ -4,7 +4,7 @@ import threading
 import time
 import speech_recognition as sr
 from .audio_meter import StreamingAudioRecorder
-from .injector import inject_text, start_new_session
+from .injector import inject_text, start_new_session, update_target_window
 from .sounds import play_cancel_sound, play_start_sound, play_stop_sound
 from .text_cleaner import clean_text
 from ..config import config
@@ -77,6 +77,10 @@ class StreamingSpeechEngine:
         if not wav_bytes or len(wav_bytes) < 3000:
             print(f"[Engine] _handle_chunk_ready: SKIPPED (too small: {len(wav_bytes)} bytes)")
             return
+        try:
+            update_target_window()
+        except Exception:
+            pass
         self._queue.put(wav_bytes)
         print(f"[Engine] _handle_chunk_ready: queued for transcription (queue size: {self._queue.qsize()})")
 
